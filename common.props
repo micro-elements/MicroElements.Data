@@ -1,0 +1,13 @@
+<Project>
+  <Import Project="version.props" />
+  <PropertyGroup>
+    <Product>MicroElements.Data</Product>
+    <Copyright>2018</Copyright>
+    <Authors>micro-elements</Authors>
+    <PackageIconUrl></PackageIconUrl>
+    <PackageProjectUrl>https://github.com/micro-elements/MicroElements.Data</PackageProjectUrl>
+    <PackageLicenseUrl>https://raw.githubusercontent.com/micro-elements/MicroElements.Data/master/LICENSE</PackageLicenseUrl>
+    <RepositoryType>git</RepositoryType>
+    <RepositoryUrl>https://github.com/micro-elements/MicroElements.Data</RepositoryUrl>
+  </PropertyGroup>
+</Project>
