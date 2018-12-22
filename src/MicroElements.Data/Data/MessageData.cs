@@ -1,14 +1,32 @@
 ﻿// Copyright (c) MicroElements. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
-
 namespace MicroElements.Data
 {
+    using System;
+
+    public interface IDataAttrubutes
+    {
+        /// <summary>
+        /// The date and time of message created.
+        /// </summary>
+        DateTime DateCreated { get; }
+
+        /// <summary>
+        /// Message identifier.
+        /// </summary>
+        string Id { get; }
+
+        /// <summary>
+        /// Data format.
+        /// </summary>
+        string Format { get; }
+    }
+
     /// <summary>
     /// Abstraction of message from different sources: File, Http, MessageQueue.
     /// </summary>
-    public class MessageData
+    public class MessageData : IDataAttrubutes
     {
         private readonly MessageData _parentData;
 

@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Text;
 
 namespace MicroElements.Data
 {
@@ -28,18 +26,6 @@ namespace MicroElements.Data
 
     public class DataObject
     {
-    }
-
-    public class DataContainer
-    {
-        public string Format;
-        public string Id;
-        public string Source;
-        public string CorrelationId;
-        public string Body;
-        public DateTime DateCreated;
-        public DataContainer Parent;
-        public Dictionary<string, string> Headers;
     }
 
     //ParseResult
