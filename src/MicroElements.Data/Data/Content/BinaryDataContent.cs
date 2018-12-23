@@ -33,33 +33,4 @@ namespace MicroElements.Data.Content
             return new MemoryStream(Content);
         }
     }
-
-    public class TextContent : IDataContent
-    {
-        private readonly string _text;
-        private readonly Encoding _encoding;
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="TextContent"/> class.
-        /// </summary>
-        /// <param name="text">Content text.</param>
-        /// <param name="encoding">Optional text encoding. By default <see cref="Encoding.UTF8"/> if not set.</param>
-        public TextContent([NotNull] string text, Encoding encoding = null)
-        {
-            _text = text;
-            _encoding = encoding ?? Encoding.UTF8;
-        }
-
-        /// <inheritdoc />
-        public int ContentLength => _encoding.GetByteCount(_text);
-
-        /// <inheritdoc />
-        public byte[] GetContentBytes() => _encoding.GetBytes(_text);
-
-        /// <inheritdoc />
-        public string GetContentText() => _text;
-
-        /// <inheritdoc />
-        public Stream GetContentStream() => new MemoryStream(_encoding.GetBytes(_text));
-    }
 }
