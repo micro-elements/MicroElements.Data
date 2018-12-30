@@ -8,21 +8,6 @@ namespace MicroElements.Data
         public IDataFilter DataFilter { get; set; }
     }
 
-    public interface IDataFilter
-    {
-        bool Matches(MessageData data);
-    }
-
-    public interface IDataHandler
-    {
-        MessageData Process(MessageData data);
-    }
-
-    public interface ISerializer
-    {
-    }
-
-
 
     public class DataObject
     {

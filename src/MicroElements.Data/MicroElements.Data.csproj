@@ -9,4 +9,13 @@
     <RootNamespace>MicroElements</RootNamespace>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Folder Include="Common\" />
+    <Folder Include="Data\StorageModel\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MicroElements.Design.Annotations" Version="0.1.0" />
+  </ItemGroup>
+
 </Project>

@@ -1,70 +1,61 @@
 ﻿namespace MicroElements.Data
 {
-    using System;
-    using System.Collections.Generic;
+    using MicroElements.Data.Content;
+    using MicroElements.Design.Annotations;
 
-    public class DataContainer : IDataAttrubutes
+    /// <summary>
+    /// Data container consist of common attributes, content, headers and properties.
+    /// <para>It can be file, http, message or database content.</para>
+    /// </summary>
+    [Model(Convention = ModelConvention.DomainModel)]
+    public class DataContainer : IDataContainer
     {
-        /// <inheritdoc />
-        public DateTime DateCreated { get; set; }
-
-        /// <inheritdoc />
-        public string Id { get; set; }
-
-        /// <inheritdoc />
-        public string Format { get; set; }
-
-        public string Source;
-        public string CorrelationId;
+        /// <summary>
+        /// Common data attributes.
+        /// </summary>
+        public IDataAttributes Attributes { get; }
 
         /// <summary>
-        /// Message content.
+        /// Data content.
         /// </summary>
         public IDataContent Content { get; }
 
         /// <summary>
-        /// Gets data
+        /// Data headers.
         /// </summary>
-        public IHeaders Headers;
-    }
+        public IHeaders Headers { get; }
 
-    public interface IMessageAttributes
-    {
-        Uri SourceAddress { get; set; }
-        Uri DestinationAddress { get; set; }
-        Uri ResponseAddress { get; set; }
-        Uri FaultAddress { get; set; }
+        /// <summary>
+        /// Properties.
+        /// </summary>
+        public IProperties Properties { get; }
 
-        Guid? RequestId { get; set; }
-        Guid? MessageId { get; set; }
-        Guid? CorrelationId { get; set; }
+        /// <summary>
+        /// Initializes a new instance of the <see cref="DataContainer"/> class.
+        /// </summary>
+        /// <param name="attributes"></param>
+        /// <param name="content"></param>
+        /// <param name="headers"></param>
+        /// <param name="properties"></param>
+        public DataContainer(
+            IDataAttributes attributes,
+            IDataContent content,
+            IHeaders headers,
+            IProperties properties)
+        {
+            Attributes = attributes;
+            Content = content;
+            Headers = headers;
+            Properties = properties;
+        }
 
-        DateTime DateCreated { get; set; }
-        TimeSpan? TimeToLive { get; set; }
-
-    }
-
-    public interface IHeaders : IDictionary<string, string>
-    {
-        //see https://github.com/MassTransit/MassTransit/blob/develop/src/MassTransit/Headers.cs
-        IEnumerable<KeyValuePair<string, object>> GetAll();
-    }
-
-    public class Properties
-    {
-
-    }
-
-    public class Property
-    {
-        public string Name { get; set; }
-        public Type Type { get; set; }
-        public object Value { get; set; }
-    }
-
-    public class PropertyStorageModel
-    {
-        public string Name { get; set; }
-        public string Type { get; set; }
+        public static IDataContainer FromText(string textContent)
+        {
+            return new DataContainer(
+                new DataAttributes(),
+                new TextContent(textContent),
+                new Headers(),
+                new Properties());
+        }
     }
 }

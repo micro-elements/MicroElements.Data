@@ -6,6 +6,7 @@ namespace MicroElements.Data.Content
     using System.IO;
     using System.Text;
     using JetBrains.Annotations;
+    using MicroElements.CodeContracts;
 
     /// <summary>
     /// Represents text content.
@@ -22,6 +23,7 @@ namespace MicroElements.Data.Content
         /// <param name="encoding">Optional text encoding. By default <see cref="Encoding.UTF8"/> if not set.</param>
         public TextContent([NotNull] string text, Encoding encoding = null)
         {
+            Requires.NotNull(text, nameof(text));
             _text = text;
             _encoding = encoding ?? Encoding.UTF8;
         }
@@ -30,33 +32,15 @@ namespace MicroElements.Data.Content
         public int ContentLength => _encoding.GetByteCount(_text);
 
         /// <inheritdoc />
+        public Encoding ContentEncoding => _encoding;
+
+        /// <inheritdoc />
         public byte[] GetContentBytes() => _encoding.GetBytes(_text);
 
         /// <inheritdoc />
         public string GetContentText() => _text;
 
         /// <inheritdoc />
-        public Stream GetContentStream() => new MemoryStream(_encoding.GetBytes(_text));
+        public Stream GetContentStream() => new MemoryStream(_encoding.GetBytes(_text), writable: false);
     }
-}
-
-namespace MicroElements.Design.CodeContracts
-{
-    //Assertions: NotNull
-}
-
-namespace MicroElements.Design.Annotations
-{
-    //ModelUsage, DDD, CQRS, Messaging
-}
-
-namespace MicroElements.Design.Analyzers
-{
-    //Analyzers for Annotations
-    //Analyzers for JetBrains Annotations without Resharper
-}
-
-namespace MicroElements.Functional
-{ 
-    //Maybe (Option), Either (Result), ValueObject, Record
 }
