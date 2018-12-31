@@ -1,6 +1,4 @@
-﻿using System.Collections.ObjectModel;
-
-namespace MicroElements.Data
+﻿namespace MicroElements.Data
 {
     using System.Collections.Generic;
 

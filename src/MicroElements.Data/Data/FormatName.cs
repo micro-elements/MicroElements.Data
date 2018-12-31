@@ -15,7 +15,7 @@
         /// <summary>
         /// Represents undefined format.
         /// </summary>
-        public static readonly FormatName Undefined = new FormatName("Undefined");
+        public static readonly FormatName Undefined = new FormatName(string.Empty);
 
         /// <summary>
         /// Gets the format name.

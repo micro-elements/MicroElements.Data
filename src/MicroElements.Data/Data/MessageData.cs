@@ -3,8 +3,6 @@
 
 namespace MicroElements.Data
 {
-    using System;
-
     /// <summary>
     /// Abstraction of message from different sources: File, Http, MessageQueue.
     /// </summary>

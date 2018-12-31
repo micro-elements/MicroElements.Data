@@ -1,5 +1,7 @@
 ﻿namespace MicroElements.Data
 {
+    using JetBrains.Annotations;
+    using MicroElements.CodeContracts;
     using MicroElements.Data.Content;
     using MicroElements.Design.Annotations;
 
@@ -33,16 +35,21 @@
         /// <summary>
         /// Initializes a new instance of the <see cref="DataContainer"/> class.
         /// </summary>
-        /// <param name="attributes"></param>
-        /// <param name="content"></param>
-        /// <param name="headers"></param>
-        /// <param name="properties"></param>
+        /// <param name="attributes">Data attributes.</param>
+        /// <param name="content">Data content.</param>
+        /// <param name="headers">Headers.</param>
+        /// <param name="properties">Properties.</param>
         public DataContainer(
-            IDataAttributes attributes,
-            IDataContent content,
-            IHeaders headers,
-            IProperties properties)
+            [NotNull] IDataAttributes attributes,
+            [NotNull] IDataContent content,
+            [NotNull] IHeaders headers,
+            [NotNull] IProperties properties)
         {
+            Requires.NotNull(attributes, nameof(attributes));
+            Requires.NotNull(content, nameof(content));
+            Requires.NotNull(headers, nameof(headers));
+            Requires.NotNull(properties, nameof(properties));
+
             Attributes = attributes;
             Content = content;
             Headers = headers;

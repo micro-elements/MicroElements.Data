@@ -1,18 +1,5 @@
-﻿using System.Text;
-
-namespace MicroElements.Data
+﻿namespace MicroElements.Data
 {
-    public class DataFormat
-    {
-        public string Name { get; set; }
-        public IDataFilter DataFilter { get; set; }
-    }
-
-
-    public class DataObject
-    {
-    }
-
     //ParseResult
     //MessageList
     //ValidationResult
@@ -21,13 +8,6 @@ namespace MicroElements.Data
     {
         public DataContainer[] Data;
 
-    }
-
-    public interface IFormatRegistry
-    {
-        void RegisterFormat(DataFormat dataFormat, IDataHandler dataHandler);
-        void RegisterFormatConverter(string sourceFormat, string targetFormat, IDataHandler dataHandler);
-        void RegisterFormatParser(string dataFormat, IDataHandler dataHandler);
     }
 
     public class DataFormatConverter

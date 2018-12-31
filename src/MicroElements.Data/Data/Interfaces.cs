@@ -6,16 +6,6 @@ namespace MicroElements.Data
     using System;
     using System.Collections.Generic;
 
-    public interface IFormatSerializer
-    {
-        object Deserialize(DataContainer dataContainer);
-    }
-
-    public interface IFormatValidator
-    {
-        IEnumerable<string> Validate(DataContainer dataContainer);
-    }
-
     public interface IFormatConverter
     {
         DataContainer Validate(DataContainer dataContainer);
@@ -34,11 +24,6 @@ namespace MicroElements.Data
     public interface IModelValidator
     {
         IEnumerable<string> Validate(object model);
-    }
-
-    public interface IDataFilter
-    {
-        bool Matches(MessageData data);
     }
 
     public interface IDataHandler
