@@ -11,11 +11,20 @@ namespace MicroElements.Data.Tests
         {
             var dataContainer = DataContainer.FromText("sample content");
 
-            DataFormat dataFormat = new DataFormat(new FormatName("SimpleTextFormat"), Filter.Empty);
+            DataFormat dataFormat = new DataFormat(
+                new FormatName("SimpleTextFormat"),
+                Filter.Empty,
+                new FormatParser(data => new ParseResult($"{data.Content.GetContentText()} parse result", null)));
 
             dataFormat.DataFilter.Matches(dataContainer).Should().BeTrue();
 
-            //dataFormat.Parser.Parse(dataContainer);
+            IParseResult parseResult = dataFormat.Parser.Parse(dataContainer);
+
+            parseResult.Should().NotBeNull();
+            parseResult.IsSuccess.Should().BeTrue();
+            parseResult.Data.Should().NotBeNull();
+
+            parseResult.Data.As<string>().Should().Be("sample content parse result");
 
             //IFormatRegistry formatRegistry;
             //formatRegistry.RegisterFormat(dataFormat, null);

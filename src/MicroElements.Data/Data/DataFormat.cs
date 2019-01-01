@@ -27,10 +27,12 @@
         /// </summary>
         /// <param name="name">The format name.</param>
         /// <param name="dataFilter">Filter that checks data matches format.</param>
-        public DataFormat(FormatName name, IDataFilter dataFilter)
+        /// <param name="parser">Format parser.</param>
+        public DataFormat(FormatName name, IDataFilter dataFilter, IFormatParser parser)
         {
             Name = name;
             DataFilter = dataFilter;
+            Parser = parser;
         }
     }
 }
