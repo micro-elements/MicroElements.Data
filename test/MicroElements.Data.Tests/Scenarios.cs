@@ -26,8 +26,6 @@ namespace MicroElements.Data.Tests
 
             parseResult.Data.As<string>().Should().Be("sample content parse result");
 
-            //IFormatRegistry formatRegistry;
-            //formatRegistry.RegisterFormat(dataFormat, null);
         }
     }
 }

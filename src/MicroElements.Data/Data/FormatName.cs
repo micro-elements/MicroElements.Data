@@ -37,5 +37,8 @@
         {
             yield return Name;
         }
+
+        /// <inheritdoc />
+        public override string ToString() => Name;
     }
 }

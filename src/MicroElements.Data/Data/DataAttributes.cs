@@ -25,10 +25,10 @@ namespace MicroElements.Data
         /// <param name="dateCreated">The date and time of data created.</param>
         /// <param name="id">Data identifier.</param>
         /// <param name="formatName">Data format.</param>
-        public DataAttributes(string id = null, string formatName = null, DateTime? dateCreated = null)
+        public DataAttributes(string id = null, FormatName formatName = null, DateTime? dateCreated = null)
         {
             Id = id ?? Guid.NewGuid().ToString();
-            FormatName = formatName != null ? new FormatName(formatName) : FormatName.Undefined;
+            FormatName = formatName != null ? formatName : FormatName.Undefined;
             DateCreated = dateCreated ?? DateTime.Now;
         }
     }

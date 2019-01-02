@@ -7,7 +7,7 @@ namespace MicroElements.Data
     using System.Text;
 
     /// <summary>
-    /// Represents content of <see cref="DataContainer"/>.
+    /// Represents content of <see cref="IDataContainer"/>.
     /// <para>Provides methods for content retrieving.</para>
     /// </summary>
     public interface IDataContent
