@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Text;
 using FluentAssertions;
@@ -20,14 +20,6 @@ namespace MicroElements.Data.Tests
             var dataContainer = DataContainer.FromText("sample content");
             dataContainer = dataContainer.WithFormat(dataFormat);
 
-            IParseResult parseResult = dataFormat.Parser.Parse(dataContainer);
-
-            parseResult.Should().NotBeNull();
-            parseResult.IsSuccess.Should().BeTrue();
-            parseResult.Data.Should().NotBeNull();
-
-            parseResult.Data.As<string>().Should().Be("sample content parse result");
-
             MemoryStream memoryStream = new MemoryStream();
             new XmlDataContainerWriter().Write(dataContainer, memoryStream, Encoding.UTF8);
 
@@ -36,9 +28,29 @@ namespace MicroElements.Data.Tests
             memoryStream.Position = 0;
             IDataContainer container = new XmlDataContainerReader().Read(memoryStream, Encoding.UTF8);
 
-            Console.WriteLine(text);
-            //IFormatRegistry formatRegistry;
-            //formatRegistry.RegisterFormat(dataFormat, null);
+            dataContainer.Should().NotBeSameAs(container);
+
+            memoryStream.Position = 0;
+            new XmlDataContainerWriter().Write(container, memoryStream, Encoding.UTF8);
+            string text2 = Encoding.UTF8.GetString(memoryStream.ToArray());
+
+            text2.Should().Be(text, "objects after serialization and deserialization should be the same");
+
+            /*
+﻿<?xml version="1.0" encoding="utf-8"?>
+<DataContainer xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+ <Attributes>
+  <DateCreated>2019-01-04T00:22:35</DateCreated>
+  <Id>df2e6536-fcb1-4c1c-a542-71c7cfcd765d</Id>
+  <FormatName>SimpleTextFormat</FormatName>
+ </Attributes>
+ <Content>
+  <Encoding>utf-8</Encoding>
+  <Text>sample content</Text>
+ </Content>
+</DataContainer>
+             */
+
         }
     }
 }

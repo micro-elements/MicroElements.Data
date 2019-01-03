@@ -2,7 +2,6 @@
 {
     using System;
     using System.Xml.Serialization;
-    using AutoMapper;
 
     [XmlRoot(ElementName = "DataContainer")]
     public class DataContainerStorageModel
@@ -38,49 +37,20 @@
         public string FormatName { get; set; }
     }
 
+    /// <summary>
+    /// StorageModel for <see cref="IDataContent"/>.
+    /// </summary>
     public class DataContentStorageModel
     {
+        /// <summary>
+        /// Encoding.
+        /// </summary>
         public string Encoding { get; set; } = "utf-8";
+
+        /// <summary>
+        /// Text.
+        /// </summary>
         public string Text { get; set; }
-    }
-
-    public class StorageModelMapper
-    {
-        public static StorageModelMapper Instance = new StorageModelMapper();
-
-        private readonly IMapper _mapper;
-
-        internal class StorageModelProfile : Profile
-        {
-            public StorageModelProfile()
-            {
-                CreateMap<IDataContainer, DataContainerStorageModel>();
-                CreateMap<IDataAttributes, DataAttributesStorageModel>()
-                    .ForMember(model => model.DateCreated, expression => expression.MapFrom(content => content.DateCreated.TrimToSeconds()));
-
-                CreateMap<IDataContent, DataContentStorageModel>()
-                    .ForMember(model => model.Encoding, expression => expression.MapFrom(content => content.ContentEncoding.WebName))
-                    .ForMember(model => model.Text, expression => expression.MapFrom(content => content.GetContentText()))
-                    ;
-            }
-        }
-
-        StorageModelMapper()
-        {
-            var config = new MapperConfiguration(cfg => { cfg.AddProfile<StorageModelProfile>(); });
-            config.AssertConfigurationIsValid();
-            _mapper = config.CreateMapper();
-        }
-
-        public DataContainerStorageModel ToStorageMode(IDataContainer dataContainer)
-        {
-            return _mapper.Map<IDataContainer, DataContainerStorageModel>(dataContainer);
-        }
-
-        public IDataContainer FromStorageMode(DataContainerStorageModel storageModel)
-        {
-            return _mapper.Map<DataContainerStorageModel, IDataContainer>(storageModel);
-        }
     }
 
     internal static class ConvertUtils
@@ -90,6 +60,4 @@
             return new DateTime(dateTime.Year, dateTime.Month, dateTime.Day, dateTime.Hour, dateTime.Minute, dateTime.Second);
         }
     }
-
-
 }
