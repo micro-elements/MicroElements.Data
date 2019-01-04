@@ -3,6 +3,7 @@ using System.IO;
 using System.Text;
 using FluentAssertions;
 using MicroElements.Data.Filters;
+using MicroElements.Data.Xml;
 using Xunit;
 
 namespace MicroElements.Data.Tests
@@ -17,8 +18,10 @@ namespace MicroElements.Data.Tests
                 Filter.Empty,
                 new FormatParser(data => new ParseResult($"{data.Content.GetContentText()} parse result", null)));
 
-            var dataContainer = DataContainer.FromText("sample content");
-            dataContainer = dataContainer.WithFormat(dataFormat);
+            var dataContainer = DataContainer
+                .FromText("sample content")
+                .WithFormat(dataFormat)
+                .WithHeader("ContentType", "text");
 
             MemoryStream memoryStream = new MemoryStream();
             new XmlDataContainerWriter().Write(dataContainer, memoryStream, Encoding.UTF8);

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 
 namespace MicroElements.Data
 {
@@ -24,6 +25,20 @@ namespace MicroElements.Data
                 dataContainer.Content,
                 dataContainer.Headers,
                 dataContainer.Properties);
+        }
+
+        public static IDataContainer WithHeader(this IDataContainer dataContainer, string headerName, string headerValue)
+        {
+            return new DataContainer(
+                dataContainer.Attributes,
+                dataContainer.Content,
+                dataContainer.Headers.WithHeader(headerName, headerValue),
+                dataContainer.Properties);
+        }
+
+        public static IHeaders WithHeader(this IHeaders headers, string headerName, string headerValue)
+        {
+            return new Headers(headers.Append(new Header(headerName, headerValue)));
         }
     }
 }

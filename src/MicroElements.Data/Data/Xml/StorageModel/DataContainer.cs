@@ -1,9 +1,13 @@
-﻿namespace MicroElements.Data.StorageModel
+﻿// Copyright (c) MicroElements. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+namespace MicroElements.Data.Xml.StorageModel
 {
     using System;
     using System.Xml.Serialization;
+    using MicroElements.Design.Annotations;
 
-    [XmlRoot(ElementName = "DataContainer")]
+    [Model(Convention = ModelConvention.StorageModel)]
     public class DataContainerStorageModel
     {
         /// <summary>
@@ -19,7 +23,8 @@
         /// <summary>
         /// Data headers.
         /// </summary>
-        IHeaders Headers { get; set; }
+        [XmlArrayItem(ElementName = "Header")]
+        public HeaderStorageModel[] Headers { get; set; }
 
         /// <summary>
         /// Properties.
@@ -51,6 +56,20 @@
         /// Text.
         /// </summary>
         public string Text { get; set; }
+    }
+
+    public class HeadersStorageModel
+    {
+        public HeaderStorageModel[] Headers { get; set; }
+    }
+
+    public class HeaderStorageModel
+    {
+        [XmlAttribute]
+        public string Name { get; set; }
+
+        [XmlAttribute]
+        public string Value { get; set; }
     }
 
     internal static class ConvertUtils

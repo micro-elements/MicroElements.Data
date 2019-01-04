@@ -1,11 +1,13 @@
 ﻿// Copyright (c) MicroElements. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace MicroElements.Data.StorageModel
+namespace MicroElements.Data.Xml
 {
+    using System.Collections.Generic;
     using System.Text;
     using AutoMapper;
     using MicroElements.Data.Content;
+    using MicroElements.Data.Xml.StorageModel;
 
     /// <summary>
     /// Mapper from <see cref="IDataContainer"/> to <see cref="DataContainerStorageModel"/> and back.
@@ -19,24 +21,26 @@ namespace MicroElements.Data.StorageModel
 
         private readonly IMapper _mapper;
 
-        internal class DomainToStorageModel : Profile
+        private class DomainToStorageModel : Profile
         {
             public DomainToStorageModel()
             {
-                CreateMap<IDataContainer, DataContainerStorageModel>();
+                CreateMap<IDataContainer, DataContainerStorageModel>()
+                    .ForMember(model => model.Headers, expression => expression.MapFrom(container => container.Headers));
                 CreateMap<IDataAttributes, DataAttributesStorageModel>()
                     .ForMember(model => model.DateCreated, expression => expression.MapFrom(content => content.DateCreated.TrimToSeconds()));
                 CreateMap<IDataContent, DataContentStorageModel>()
                     .ForMember(model => model.Encoding, expression => expression.MapFrom(content => content.ContentEncoding.WebName))
-                    .ForMember(model => model.Text, expression => expression.MapFrom(content => content.GetContentText()))
-                    ;
+                    .ForMember(model => model.Text, expression => expression.MapFrom(content => content.GetContentText()));
+                CreateMap<Header, HeaderStorageModel>();
             }
         }
 
-        internal class StorageModelToDomain : Profile
+        private class StorageModelToDomain : Profile
         {
             public StorageModelToDomain()
             {
+                CreateMap<HeaderStorageModel, Header>();
                 CreateMap<DataAttributesStorageModel, DataAttributes>()
                     .ConstructUsing((model, context) => new DataAttributes(model.Id, new FormatName(model.FormatName), model.DateCreated));
                 CreateMap<DataContentStorageModel, TextContent>()
@@ -46,7 +50,7 @@ namespace MicroElements.Data.StorageModel
                         new DataContainer(
                             context.Mapper.Map<DataAttributesStorageModel, DataAttributes>(model.Attributes),
                             context.Mapper.Map<DataContentStorageModel, TextContent>(model.Content),
-                            new Headers(),
+                            new Headers(context.Mapper.Map<HeaderStorageModel[], IEnumerable<Header>>(model.Headers)),
                             new Properties()));
             }
         }
@@ -62,12 +66,12 @@ namespace MicroElements.Data.StorageModel
             _mapper = config.CreateMapper();
         }
 
-        public DataContainerStorageModel ToStorageMode(IDataContainer dataContainer)
+        public DataContainerStorageModel ToStorageModel(IDataContainer dataContainer)
         {
             return _mapper.Map<IDataContainer, DataContainerStorageModel>(dataContainer);
         }
 
-        public IDataContainer FromStorageMode(DataContainerStorageModel storageModel)
+        public IDataContainer FromStorageModel(DataContainerStorageModel storageModel)
         {
             return _mapper.Map<DataContainerStorageModel, IDataContainer>(storageModel);
         }
