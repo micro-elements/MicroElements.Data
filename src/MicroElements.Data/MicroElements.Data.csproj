@@ -12,6 +12,7 @@
   <ItemGroup>
     <PackageReference Include="AutoMapper" Version="8.0.0" />
     <PackageReference Include="MicroElements.Design.Annotations" Version="0.1.0" />
+    <PackageReference Include="MicroElements.Functional" Version="0.1.0" />
   </ItemGroup>
 
 </Project>
