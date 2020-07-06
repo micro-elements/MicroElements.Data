@@ -9,8 +9,13 @@ namespace MicroElements.Data.Caching
     /// <summary>
     /// Represents cache behavior.
     /// </summary>
-    public interface ICacheSettings : ICacheSectionInfo
+    public interface ICacheSettings
     {
+        /// <summary>
+        /// Gets value type that cache section holds.
+        /// </summary>
+        Type ValueType { get; }
+
         /// <summary>
         /// Gets a value indicating whether cache should cache error values.
         /// </summary>

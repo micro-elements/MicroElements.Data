@@ -9,28 +9,60 @@ namespace MicroElements.Data.Caching
     /// <summary>
     /// Represents cache result.
     /// </summary>
-    /// <typeparam name="TValue"></typeparam>
+    /// <typeparam name="TValue">Value type.</typeparam>
     public readonly struct CacheResult<TValue> : IMetadataProvider
     {
+        /// <summary>
+        /// Section name.
+        /// </summary>
+        public string SectionName { get; }
+
+        /// <summary>
+        /// Cache settings.
+        /// </summary>
         public ICacheSettings Settings { get; }
+
+        /// <summary>
+        /// Cache key.
+        /// </summary>
         public string Key { get; }
+
+        /// <summary>
+        /// Cached value if present and not error <see cref="Error"/>.
+        /// </summary>
         public TValue Value { get; }
-        public Message Error { get; }
+
+        /// <summary>
+        /// Optional error.
+        /// </summary>
+        public Message? Error { get; }
+
+        /// <summary>
+        /// Metadata associated with cache item.
+        /// </summary>
         public IPropertyContainer Metadata { get; }
+
+        /// <summary>
+        /// Cache hit or miss.
+        /// </summary>
         public CacheHitMiss HitMiss { get; }
+
+        /// <summary>
+        /// Returns true if item was cached.
+        /// </summary>
         public bool IsCached { get; }
 
-        public string SectionName => Settings.SectionName;
-
         public CacheResult(
+            string sectionName,
             ICacheSettings settings,
             string key,
             TValue value,
-            Message error,
+            Message? error,
             IPropertyContainer metadata,
             CacheHitMiss hitMiss,
             bool isCached)
         {
+            SectionName = sectionName;
             Settings = settings;
             Key = key;
             Value = value;

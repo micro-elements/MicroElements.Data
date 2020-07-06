@@ -5,6 +5,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -19,40 +20,52 @@ namespace MicroElements.Data.Caching
     /// - ключи представляют собой строки
     /// - используется блокировка по ключу при получении данных через фабрику
     /// </summary>
+    /// <typeparam name="TValue">Value type.</typeparam>
     public class CacheSection<TValue> : ICacheSection<TValue>
     {
         private readonly IMemoryCache _memoryCache;
-        private readonly bool _isExternalCache;
         private readonly ICacheSettings<TValue> _settings;
-        private readonly Action<ICacheContext> _configureCacheEntry;
+        private readonly Action<ICacheContext>? _configureCacheEntry;
         private readonly ConcurrentDictionary<string, SemaphoreSlim> _keys = new ConcurrentDictionary<string, SemaphoreSlim>();
 
-        public string Name { get; }
+        /// <inheritdoc />
+        public string SectionName { get; }
 
+        /// <inheritdoc />
+        public Type ValueType => typeof(TValue);
+
+        /// <inheritdoc />
         public IReadOnlyCollection<string> Keys => _keys.Keys.ToList();
 
-        public CacheSection(string name,
-            IMemoryCache memoryCache = null,
-            Action<ICacheContext> configureCacheEntry = null,
-            ICacheSettings<TValue> settings = null)
+        /// <summary>
+        /// Initializes a new instance of the <see cref="CacheSection{TValue}"/> class.
+        /// </summary>
+        /// <param name="sectionName">Section name.</param>
+        /// <param name="memoryCache">Provided memory cache.</param>
+        /// <param name="configureCacheEntry">External configure function.</param>
+        /// <param name="settings">Cache settings.</param>
+        public CacheSection(
+            [NotNull] string sectionName,
+            [NotNull] IMemoryCache memoryCache,
+            Action<ICacheContext>? configureCacheEntry = null,
+            ICacheSettings<TValue>? settings = null)
         {
-            Name = name;
-            Info = new CacheSettings<>();
-            _memoryCache = memoryCache;// ?? new MemoryCache(new OptionsWrapper<MemoryCacheOptions>(new MemoryCacheOptions()));
-            _isExternalCache = memoryCache != null;
+            SectionName = sectionName.AssertArgumentNotNull(nameof(sectionName));
+            _memoryCache = memoryCache.AssertArgumentNotNull(nameof(memoryCache));
             _configureCacheEntry = configureCacheEntry;
-            _settings = settings;
+            _settings = settings ?? CacheSettings<TValue>.Default;
         }
 
         /// <inheritdoc />
-        public ICacheSectionInfo Info { get; }
-
         public ICacheSettings SettingsUntyped => _settings;
 
+        /// <inheritdoc />
         public ICacheSettings<TValue> Settings => _settings;
 
-        public override string ToString() => $"Name: {Name}, Keys: {_keys.Count}";
+        /// <inheritdoc />
+        public override string ToString() => $"Name: {SectionName}, Keys: {_keys.Count}";
 
+        /// <inheritdoc />
         public async Task<CacheResult<TValue>> GetOrCreateAsync(string key, Func<ICacheContext, Task<TValue>> factory)
         {
             using var keyLock = await _keys
@@ -72,7 +85,7 @@ namespace MicroElements.Data.Caching
                 Stopwatch sw = Stopwatch.StartNew();
 
                 TValue value = default;
-                Message message;
+                Message? message;
                 bool isSuccess;
                 bool shouldCache;
 
@@ -136,12 +149,21 @@ namespace MicroElements.Data.Caching
                 isCached = true;
             }
 
-            CacheResult<TValue> cacheResult = new CacheResult<TValue>(Settings, key, cacheItem.Value, cacheItem.Error, cacheItem.Metadata, cacheHitMiss, isCached);
+            CacheResult<TValue> cacheResult = new CacheResult<TValue>(
+                SectionName,
+                Settings,
+                key,
+                cacheItem.Value,
+                cacheItem.Error,
+                cacheItem.Metadata,
+                cacheHitMiss,
+                isCached);
 
             return cacheResult;
         }
 
-        public void SetValue(string key, TValue value)
+        /// <inheritdoc/>
+        public void Set(string key, TValue value)
         {
             using var keyLock = _keys
                 .GetOrAdd(key, k => new SemaphoreSlim(1))
@@ -157,17 +179,24 @@ namespace MicroElements.Data.Caching
             cacheEntry.Dispose();
         }
 
+        /// <inheritdoc/>
         public void RemoveValue(string key)
         {
             _memoryCache.Remove(key);
             _keys.TryRemove(key, out _);
         }
 
-        public bool TryGetValue(string key, out TValue result)
+        /// <summary>
+        /// Gets the item associated with this key if present.
+        /// </summary>
+        /// <param name="key">An object identifying the requested entry.</param>
+        /// <param name="value">The located value or null.</param>
+        /// <returns>True if the key was found.</returns>
+        public bool TryGetValue(string key, out TValue value)
         {
             bool hasValue = _memoryCache.TryGetValue(key, out object cached);
             CacheItem<TValue> cacheItem = hasValue ? (CacheItem<TValue>)cached : default;
-            result = hasValue ? cacheItem.Value : default;
+            value = hasValue ? cacheItem.Value : default;
 
             if (!hasValue)
             {
@@ -177,6 +206,7 @@ namespace MicroElements.Data.Caching
             return hasValue;
         }
 
+        /// <inheritdoc />
         public Option<TValue> Get(string key)
         {
             if (TryGetValue(key, out TValue value))
@@ -184,6 +214,7 @@ namespace MicroElements.Data.Caching
             return Option<TValue>.None;
         }
 
+        /// <inheritdoc/>
         public void Clear()
         {
             foreach (string key in Keys)
