@@ -14,9 +14,14 @@ namespace MicroElements.Data.Caching
     public interface ICacheSection
     {
         /// <summary>
-        /// Gets section information.
+        /// Gets section name.
         /// </summary>
-        ICacheSectionInfo Info { get; }
+        string SectionName { get; }
+
+        /// <summary>
+        /// Gets value type that cache section holds.
+        /// </summary>
+        Type ValueType { get; }
 
         /// <summary>
         /// Gets section options.
@@ -54,13 +59,18 @@ namespace MicroElements.Data.Caching
         Task<CacheResult<TValue>> GetOrCreateAsync(string key, Func<ICacheContext, Task<TValue>> factory);
 
         /// <summary>
-        /// 
+        /// Gets optional value by key.
         /// </summary>
         /// <param name="key">Cache key.</param>
-        /// <returns></returns>
+        /// <returns>Optional value.</returns>
         Option<TValue> Get(string key);
 
-        void SetValue(string key, TValue value);
+        /// <summary>
+        /// Sets value for <paramref name="key"/>.
+        /// </summary>
+        /// <param name="key">Cache key.</param>
+        /// <param name="value">Value to cache.</param>
+        void Set(string key, TValue value);
 
         void RemoveValue(string key);
     }

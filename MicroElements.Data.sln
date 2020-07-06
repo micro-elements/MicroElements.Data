@@ -13,6 +13,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MicroElements.Data.Tests", 
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{A3B3F8CC-133C-47FF-9CFF-4B91F645879A}"
 	ProjectSection(SolutionItems) = preProject
+		.travis.yml = .travis.yml
+		build.ps1 = build.ps1
+		build.sh = build.sh
 		CHANGELOG.md = CHANGELOG.md
 		common.props = common.props
 		src\Directory.Build.props = src\Directory.Build.props
