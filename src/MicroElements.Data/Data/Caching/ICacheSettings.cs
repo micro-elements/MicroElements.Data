@@ -23,7 +23,7 @@ namespace MicroElements.Data.Caching
 
         /// <summary>
         /// Gets default DataSource for cache items.
-        /// Can be overriden in cache item factory method. TODO: check usage
+        /// Can be overriden in cache item factory method. TODO: check usage.
         /// </summary>
         string DataSource { get; }
 

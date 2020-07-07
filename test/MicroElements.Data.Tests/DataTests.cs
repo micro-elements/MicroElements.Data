@@ -68,10 +68,10 @@ namespace MicroElements.Data.Tests
                 Validate = d => d < 0? new Message("Should be greater then 0.", MessageSeverity.Error) : null
             });
 
-
-        public static ICacheSectionDescriptor<double> Section3 =
+        public static ICacheSectionDescriptor<double> Section2 =
             new CacheSettings<double>()
                 .SetCacheErrorValue(false)
+                .SetDataSource("WebService")
                 .SetValidate(d => d < 0 ? new Message("Should be greater then 0.", MessageSeverity.Error) : null)
                 .CreateSectionDescriptor("Section3");
 

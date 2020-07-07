@@ -7,6 +7,53 @@ using MicroElements.Functional;
 namespace MicroElements.Data.Caching
 {
     /// <summary>
+    /// Untyped cache settings.
+    /// </summary>
+    public class CacheSettings : ICacheSettings
+    {
+        /// <summary>
+        /// Default cache settings.
+        /// </summary>
+        public static readonly ICacheSettings Default = new CacheSettings
+        {
+            // Do not cache errors by default
+            CacheErrorValue = false,
+
+            // Does not handle exceptions (rethrow)
+            HandleError = null,
+
+            // Unknown data source.
+            DataSource = "Unknown",
+        };
+
+        /// <inheritdoc />
+        public Type ValueType => typeof(object);
+
+        /// <inheritdoc />
+        public bool CacheErrorValue { get; set; }
+
+        /// <inheritdoc />
+        public string DataSource { get; set; }
+
+        /// <inheritdoc />
+        public Func<Exception, Message>? HandleError { get; set; }
+
+        public CacheSettings() { }
+
+        public CacheSettings(
+            ICacheSettings? @base = null,
+            bool? cacheErrorValue = null,
+            string? dataSource = null,
+            Func<Exception, Message>? handleError = null)
+        {
+            @base ??= Default;
+            CacheErrorValue = cacheErrorValue ?? @base.CacheErrorValue;
+            DataSource = dataSource ?? @base.DataSource;
+            HandleError = handleError ?? @base.HandleError;
+        }
+    }
+
+    /// <summary>
     /// Typed cache settings.
     /// </summary>
     /// <typeparam name="TValue">Value type.</typeparam>
@@ -41,12 +88,13 @@ namespace MicroElements.Data.Caching
         }
 
         public CacheSettings(
-            ICacheSettings @base,
+            ICacheSettings? @base = null,
             bool? cacheErrorValue = null,
             string? dataSource = null,
             Func<Exception, Message>? handleError = null,
             Func<TValue, Message>? validate = null)
         {
+            @base ??= Default;
             CacheErrorValue = cacheErrorValue ?? @base.CacheErrorValue;
             DataSource = dataSource ?? @base.DataSource;
             HandleError = handleError ?? @base.HandleError;
@@ -54,12 +102,13 @@ namespace MicroElements.Data.Caching
         }
 
         public CacheSettings(
-            ICacheSettings<TValue> @base,
+            ICacheSettings<TValue>? @base = null,
             bool? cacheErrorValue = null,
             string? dataSource = null,
             Func<Exception, Message>? handleError = null,
             Func<TValue, Message>? validate = null)
         {
+            @base ??= Default;
             CacheErrorValue = cacheErrorValue ?? @base.CacheErrorValue;
             DataSource = dataSource ?? @base.DataSource;
             HandleError = handleError ?? @base.HandleError;
@@ -68,53 +117,51 @@ namespace MicroElements.Data.Caching
     }
 
     /// <summary>
-    /// Untyped cache settings.
+    /// ReadOnly Typed cache settings.
     /// </summary>
-    public class CacheSettings : ICacheSettings
+    /// <typeparam name="TValue">Value type.</typeparam>
+    public class ReadOnlyCacheSettings<TValue> : ICacheSettings<TValue>
     {
-        /// <summary>
-        /// Default cache settings.
-        /// </summary>
-        public static readonly ICacheSettings Default = new CacheSettings
+        /// <inheritdoc />
+        public Type ValueType => typeof(TValue);
+
+        /// <inheritdoc />
+        public bool CacheErrorValue { get; }
+
+        /// <inheritdoc />
+        public string DataSource { get; }
+
+        /// <inheritdoc />
+        public Func<Exception, Message>? HandleError { get; }
+
+        /// <inheritdoc />
+        public Func<TValue, Message>? Validate { get; }
+
+        public ReadOnlyCacheSettings(
+            bool cacheErrorValue,
+            string dataSource,
+            Func<Exception, Message>? handleError,
+            Func<TValue, Message>? validate)
         {
-            // Do not cache errors by default
-            CacheErrorValue = false,
-
-            // Does not handle exceptions (rethrow)
-            HandleError = null,
-
-            // Unknown data source.
-            DataSource = "Unknown",
-        };
-
-        /// <inheritdoc />
-        public Type ValueType => typeof(object);
-
-        /// <inheritdoc />
-        public bool CacheErrorValue { get; private set; }
-
-        /// <inheritdoc />
-        public string DataSource { get; private set; }
-
-        /// <inheritdoc />
-        public Func<Exception, Message>? HandleError { get; private set; }
-
-        public CacheSettings() { }
-
-        public CacheSettings(
-            ICacheSettings @base,
-            bool? cacheErrorValue = null,
-            string? dataSource = null,
-            Func<Exception, Message>? handleError = null)
-        {
-            CacheErrorValue = cacheErrorValue ?? @base.CacheErrorValue;
-            DataSource = dataSource ?? @base.DataSource;
-            HandleError = handleError ?? @base.HandleError;
+            CacheErrorValue = cacheErrorValue;
+            DataSource = dataSource;
+            HandleError = handleError;
+            Validate = validate;
         }
     }
 
+    /// <summary>
+    /// CacheSettings extensions.
+    /// </summary>
     public static class CacheSettingsExtensions
     {
+        public static ICacheSettings<TValue> Configure<TValue>(this ICacheSettings<TValue> cacheSettings, Action<CacheSettings<TValue>> configure)
+        {
+            var settings = new CacheSettings<TValue>(cacheSettings);
+            configure(settings);
+            return settings;
+        }
+
         public static ICacheSettings SetCacheErrorValue(this ICacheSettings cacheSettings, bool cacheErrorValue = true)
         {
             return new CacheSettings(cacheSettings, cacheErrorValue: cacheErrorValue);
@@ -123,6 +170,16 @@ namespace MicroElements.Data.Caching
         public static ICacheSettings<TValue> SetCacheErrorValue<TValue>(this ICacheSettings<TValue> cacheSettings, bool cacheErrorValue = true)
         {
             return new CacheSettings<TValue>(cacheSettings, cacheErrorValue: cacheErrorValue);
+        }
+
+        public static ICacheSettings SetDataSource(this ICacheSettings cacheSettings, string dataSource)
+        {
+            return new CacheSettings(cacheSettings, dataSource: dataSource);
+        }
+
+        public static ICacheSettings<TValue> SetDataSource<TValue>(this ICacheSettings<TValue> cacheSettings, string dataSource)
+        {
+            return new CacheSettings<TValue>(cacheSettings, dataSource: dataSource);
         }
 
         public static ICacheSettings SetHandleError(this ICacheSettings cacheSettings, Func<Exception, Message> handleError)
@@ -147,7 +204,16 @@ namespace MicroElements.Data.Caching
 
         public static ICacheSectionDescriptor<TValue> CreateSectionDescriptor<TValue>(this ICacheSettings<TValue> cacheSettings, string sectionName)
         {
-            return new CacheSectionDescriptor<TValue>(sectionName, cacheSettings);
+            return new CacheSectionDescriptor<TValue>(sectionName, cacheSettings.AsReadOnly());
+        }
+
+        public static ICacheSettings<TValue> AsReadOnly<TValue>(this ICacheSettings<TValue> cacheSettings)
+        {
+            return new ReadOnlyCacheSettings<TValue>(
+                cacheErrorValue: cacheSettings.CacheErrorValue,
+                dataSource: cacheSettings.DataSource,
+                handleError: cacheSettings.HandleError,
+                validate: cacheSettings.Validate);
         }
     }
 }
