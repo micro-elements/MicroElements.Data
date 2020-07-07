@@ -72,6 +72,10 @@ namespace MicroElements.Data.Caching
         /// <param name="value">Value to cache.</param>
         void Set(string key, TValue value);
 
-        void RemoveValue(string key);
+        /// <summary>
+        /// Removes value by key.
+        /// </summary>
+        /// <param name="key">Cache key.</param>
+        void Remove(string key);
     }
 }

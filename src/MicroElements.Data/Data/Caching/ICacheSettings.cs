@@ -26,6 +26,11 @@ namespace MicroElements.Data.Caching
         /// Can be overriden in cache item factory method. TODO: check usage
         /// </summary>
         string DataSource { get; }
+
+        /// <summary>
+        /// Gets optional exception handler for handling exceptions while factory creation.
+        /// </summary>
+        Func<Exception, Message>? HandleError { get; }
     }
 
     /// <summary>
@@ -38,10 +43,5 @@ namespace MicroElements.Data.Caching
         /// Gets optional value validation func to determine error.
         /// </summary>
         Func<TValue, Message>? Validate { get; }
-
-        /// <summary>
-        /// Gets optional exception handler for handling exceptions while factory creation.
-        /// </summary>
-        Func<Exception, Message>? HandleCreateError { get; }
     }
 }

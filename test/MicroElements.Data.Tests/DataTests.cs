@@ -61,11 +61,20 @@ namespace MicroElements.Data.Tests
 
     public static class Cache
     {
-        public static ICacheSectionDescriptor<double> Section1 = new CacheSectionDescriptor<double>("Section1", new CacheSettings<double>()
-        {
-            CacheErrorValue = false,
-            Validate = d => d < 0? new Message("Should be greater then 0.", MessageSeverity.Error) : null
-        });
+        public static ICacheSectionDescriptor<double> Section1 = new CacheSectionDescriptor<double>("Section1",
+            new CacheSettings<double>()
+            {
+                CacheErrorValue = false,
+                Validate = d => d < 0? new Message("Should be greater then 0.", MessageSeverity.Error) : null
+            });
+
+
+        public static ICacheSectionDescriptor<double> Section3 =
+            new CacheSettings<double>()
+                .SetCacheErrorValue(false)
+                .SetValidate(d => d < 0 ? new Message("Should be greater then 0.", MessageSeverity.Error) : null)
+                .CreateSectionDescriptor("Section3");
+
     }
 
     public class TestData : IEquatable<TestData>

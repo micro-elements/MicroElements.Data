@@ -82,15 +82,15 @@ namespace MicroElements.Data.Caching
                 var cacheEntry = _memoryCache.CreateEntry(key);
 
                 var cacheContext = new CacheContext(cacheEntry);
-                Stopwatch sw = Stopwatch.StartNew();
-
-                TValue value = default;
-                Message? message;
-                bool isSuccess;
-                bool shouldCache;
+                var sw = Stopwatch.StartNew();
 
                 try
                 {
+                    TValue value = default;
+                    Message? message;
+                    bool isSuccess;
+                    bool shouldCache;
+
                     try
                     {
                         value = await factory(cacheContext);
@@ -99,7 +99,7 @@ namespace MicroElements.Data.Caching
                     }
                     catch (Exception e)
                     {
-                        message = _settings.HandleCreateError?.Invoke(e) ?? new Message($"Error in get cache value: {e.Message}", MessageSeverity.Error);
+                        message = _settings.HandleError?.Invoke(e) ?? new Message($"Error in get cache value: {e.Message}", MessageSeverity.Error);
                         isSuccess = false;
                         shouldCache = _settings.CacheErrorValue;
 
@@ -180,7 +180,7 @@ namespace MicroElements.Data.Caching
         }
 
         /// <inheritdoc/>
-        public void RemoveValue(string key)
+        public void Remove(string key)
         {
             _memoryCache.Remove(key);
             _keys.TryRemove(key, out _);
@@ -219,7 +219,7 @@ namespace MicroElements.Data.Caching
         {
             foreach (string key in Keys)
             {
-                RemoveValue(key);
+                Remove(key);
             }
         }
     }

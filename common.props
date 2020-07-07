@@ -4,7 +4,7 @@
     <Product>MicroElements.Data</Product>
     <Copyright>2020</Copyright>
     <Authors>micro-elements</Authors>
-    <Description></Description>
+    <Description>Data aspects: caching, processing, pipeline</Description>
 
     <PackageTags>cache;processing;pipeline</PackageTags>
     <PackageIconUrl>https://raw.githubusercontent.com/micro-elements/MicroElements/master/image/logo_rounded.png</PackageIconUrl>
@@ -12,6 +12,5 @@
     <PackageLicenseUrl>https://raw.githubusercontent.com/micro-elements/MicroElements.Data/master/LICENSE</PackageLicenseUrl>
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/micro-elements/MicroElements.Data</RepositoryUrl>
-    <PackageIconUrl></PackageIconUrl>
   </PropertyGroup>
 </Project>
