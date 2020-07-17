@@ -87,7 +87,7 @@ namespace MicroElements.Data.Caching
                 try
                 {
                     TValue value = default;
-                    Message? message;
+                    Message? message = null;
                     bool isSuccess;
                     bool shouldCache;
 
@@ -99,13 +99,24 @@ namespace MicroElements.Data.Caching
                     }
                     catch (Exception e)
                     {
-                        message = _settings.HandleError?.Invoke(e) ?? new Message($"Error in get cache value: {e.Message}", MessageSeverity.Error);
+                        if (_settings.HandleError != null)
+                            message = _settings.HandleError?.Invoke(e);
+                        message ??= new Message("Error while getting value for cache. Section: {SectionName}, Key: {Key}, ErrorMessage: {ErrorMessage}", MessageSeverity.Error);
+                        message = message.WithProperties(
+                            new KeyValuePair<string, object>[]
+                            {
+                                new KeyValuePair<string, object>("SectionName", SectionName),
+                                new KeyValuePair<string, object>("Key", key),
+                                new KeyValuePair<string, object>("Exception", e),
+                                new KeyValuePair<string, object>("ErrorMessage", e.Message),
+                            }, PropertyAddMode.AddIfNotExists);
+
                         isSuccess = false;
                         shouldCache = _settings.CacheErrorValue;
 
                         if (!shouldCache)
                         {
-                            throw;
+                            throw new CacheException(message.FormattedMessage, e);
                         }
                     }
 

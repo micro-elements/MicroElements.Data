@@ -52,6 +52,9 @@ namespace MicroElements.Data.Caching
         /// </summary>
         public bool IsCached { get; }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="CacheResult{TValue}"/> struct.
+        /// </summary>
         public CacheResult(
             string sectionName,
             ICacheSettings settings,
@@ -72,6 +75,13 @@ namespace MicroElements.Data.Caching
             IsCached = isCached;
         }
 
-        public static implicit operator TValue(CacheResult<TValue> cacheResult) => cacheResult.Value;
+        /// <summary>
+        /// Converts to base type.
+        /// </summary>
+        /// <param name="cacheResult">Cache result.</param>
+        /// <returns>Value if no error or exception.</returns>
+        /// <exception cref="CacheException">Cache error.</exception>
+        public static implicit operator TValue(CacheResult<TValue> cacheResult)
+            => cacheResult.Error == null ? cacheResult.Value : throw new CacheException(cacheResult.Error.FormattedMessage, cacheResult.Error.GetException());
     }
 }

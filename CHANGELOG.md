@@ -1,3 +1,8 @@
+# 0.3.0
+- GetAllValues, GetAllKeyValues
+- CacheResult throws CacheException in implicit conversion if result has error
+- CacheResult.Error enriches with properties: SectionName, Key, Exception, ErrorMessage
+
 # 0.2.0
 - CacheSettings builder
 

@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading.Tasks;
 using MicroElements.Functional;
@@ -11,11 +12,21 @@ using Microsoft.Extensions.Logging;
 
 namespace MicroElements.Data.Caching
 {
-    public static class CacheDataExtensions
+    /// <summary>
+    /// Extensions for cache.
+    /// </summary>
+    public static class CacheExtensions
     {
-        public static IEnumerable<T> GetAllValues<T>(this CacheManager cacheManager, ICacheSectionDescriptor<T> sectionDescriptor)
+        /// <summary>
+        /// Gets all values from <see cref="ICacheSection{TValue}"/>.
+        /// </summary>
+        /// <typeparam name="T">Data type.</typeparam>
+        /// <param name="cacheSection">Cache section.</param>
+        /// <returns>Enumerable of <typeparamref name="T"/>.</returns>
+        [return: NotNull]
+        public static IEnumerable<T> GetAllValues<T>([NotNull] this ICacheSection<T> cacheSection)
         {
-            var cacheSection = cacheManager.GetOrCreateSection(sectionDescriptor);
+            cacheSection.AssertArgumentNotNull(nameof(cacheSection));
 
             var values = cacheSection
                 .Keys
@@ -26,40 +37,129 @@ namespace MicroElements.Data.Caching
             return values;
         }
 
-        public static IEnumerable<T> GetAllValues<T>(this CacheManager cacheManager, string sectionName)
+        /// <summary>
+        /// Gets all values from <paramref name="cacheManager"/> using <paramref name="sectionDescriptor"/>.
+        /// </summary>
+        /// <typeparam name="T">Data type.</typeparam>
+        /// <param name="cacheManager">Cache manager.</param>
+        /// <param name="sectionDescriptor">Section descriptor to get or create cache section.</param>
+        /// <returns>Enumerable of <typeparamref name="T"/>.</returns>
+        [return: NotNull]
+        public static IEnumerable<T> GetAllValues<T>([NotNull] this CacheManager cacheManager, [NotNull] ICacheSectionDescriptor<T> sectionDescriptor)
         {
+            cacheManager.AssertArgumentNotNull(nameof(cacheManager));
+            sectionDescriptor.AssertArgumentNotNull(nameof(sectionDescriptor));
+
+            var cacheSection = cacheManager.GetOrCreateSection(sectionDescriptor);
+            return cacheSection.GetAllValues();
+        }
+
+        /// <summary>
+        /// Gets all values from <paramref name="cacheManager"/> using <paramref name="sectionName"/>.
+        /// </summary>
+        /// <typeparam name="T">Data type.</typeparam>
+        /// <param name="cacheManager">Cache manager.</param>
+        /// <param name="sectionName">Section name to find cache section.</param>
+        /// <returns>Enumerable of <typeparamref name="T"/>.</returns>
+        [return: NotNull]
+        public static IEnumerable<T> GetAllValues<T>([NotNull] this CacheManager cacheManager, [NotNull] string sectionName)
+        {
+            cacheManager.AssertArgumentNotNull(nameof(cacheManager));
+            sectionName.AssertArgumentNotNull(nameof(sectionName));
+
             var cacheSection = cacheManager.GetSection<T>(sectionName);
             if (cacheSection == null)
                 return Array.Empty<T>();
 
-            IEnumerable<T> values = cacheSection.Keys
-                .Select(key => cacheSection.Get(key))
-                .Where(option => option.IsSome)
-                .Select(option => option.GetValueOrDefault());
+            return cacheSection.GetAllValues();
+        }
+
+        /// <summary>
+        /// Gets all key-value pairs from <see cref="ICacheSection{TValue}"/>.
+        /// </summary>
+        /// <typeparam name="T">Data type.</typeparam>
+        /// <param name="cacheSection">Cache section.</param>
+        /// <returns>Enumerable of <typeparamref name="T"/>.</returns>
+        public static IEnumerable<(string Key, T Value)> GetAllKeyValues<T>([NotNull] this ICacheSection<T> cacheSection)
+        {
+            cacheSection.AssertArgumentNotNull(nameof(cacheSection));
+
+            var values = cacheSection
+                .Keys
+                .Select(key => (key, cacheSection.Get(key)))
+                .Where(kv => kv.Item2.IsSome)
+                .Select(kv => (kv.key, kv.Item2.GetValueOrDefault()));
 
             return values;
         }
 
+        /// <summary>
+        /// Gets all key-value pairs from <paramref name="cacheManager"/> using <paramref name="sectionDescriptor"/>.
+        /// </summary>
+        /// <typeparam name="T">Data type.</typeparam>
+        /// <param name="cacheManager">Cache manager.</param>
+        /// <param name="sectionDescriptor">Section descriptor to get or create cache section.</param>
+        /// <returns>Enumerable of <typeparamref name="T"/>.</returns>
+        [return: NotNull]
+        public static IEnumerable<(string Key, T Value)> GetAllKeyValues<T>([NotNull] this CacheManager cacheManager, [NotNull] ICacheSectionDescriptor<T> sectionDescriptor)
+        {
+            cacheManager.AssertArgumentNotNull(nameof(cacheManager));
+            sectionDescriptor.AssertArgumentNotNull(nameof(sectionDescriptor));
+
+            var cacheSection = cacheManager.GetOrCreateSection(sectionDescriptor);
+            return cacheSection.GetAllKeyValues();
+        }
+
+        /// <summary>
+        /// Gets all key-value pairs from <paramref name="cacheManager"/> using <paramref name="sectionName"/>.
+        /// </summary>
+        /// <typeparam name="T">Data type.</typeparam>
+        /// <param name="cacheManager">Cache manager.</param>
+        /// <param name="sectionName">Section name to find cache section.</param>
+        /// <returns>Enumerable of <typeparamref name="T"/>.</returns>
+        [return: NotNull]
+        public static IEnumerable<(string Key, T Value)> GetAllKeyValues<T>([NotNull] this CacheManager cacheManager, [NotNull] string sectionName)
+        {
+            cacheManager.AssertArgumentNotNull(nameof(cacheManager));
+            sectionName.AssertArgumentNotNull(nameof(sectionName));
+
+            var cacheSection = cacheManager.GetSection<T>(sectionName);
+            if (cacheSection == null)
+                return Array.Empty<(string, T)>();
+
+            return cacheSection.GetAllKeyValues();
+        }
+
+        /// <summary>
+        /// Gets <see cref="CacheManager.Elapsed"/> value.
+        /// </summary>
         public static TimeSpan Elapsed(this IMetadataProvider provider) => provider.Metadata.GetValue(CacheManager.Elapsed);
 
+        /// <summary>
+        /// Logs <see cref="CacheResult{TValue}"/> advanced info: CACHE HIT, CACHE MISS, CACHE ERROR.
+        /// </summary>
         public static async Task<CacheResult<T>> WithLogging<T>(this Task<CacheResult<T>> cacheResultTask, ILogger logger)
         {
             var cacheResult = await cacheResultTask;
             return cacheResult.WithLogging(logger);
         }
 
+        /// <summary>
+        /// Logs <see cref="CacheResult{TValue}"/> advanced info: CACHE HIT, CACHE MISS, CACHE ERROR.
+        /// </summary>
         public static CacheResult<T> WithLogging<T>(this in CacheResult<T> cacheResult, ILogger logger)
         {
+            string elapsed = $"Elapsed: {(int)cacheResult.Elapsed().TotalMilliseconds} ms.";
             if (cacheResult.HitMiss == CacheHitMiss.Hit)
             {
-                logger.LogInformation($"CACHE HIT : {cacheResult.SectionName}.{cacheResult.Key}. Data was found in Cache.");
+                logger.LogInformation($"CACHE HIT : {cacheResult.SectionName}.{cacheResult.Key}. Data was found in Cache, {elapsed}");
             }
             else if (cacheResult.HitMiss == CacheHitMiss.Miss)
             {
                 if (cacheResult.Error == null)
-                    logger.LogInformation($"CACHE MISS: {cacheResult.SectionName}.{cacheResult.Key}. Data was successfully retrieved from {cacheResult.Settings.DataSource}. Elapsed: {(int)cacheResult.Elapsed().TotalMilliseconds} ms.");
+                    logger.LogInformation($"CACHE MISS: {cacheResult.SectionName}.{cacheResult.Key}. Data was successfully retrieved from {cacheResult.Settings.DataSource}, {elapsed}.");
                 else
-                    logger.LogInformation($"CACHE ERROR: {cacheResult.SectionName}.{cacheResult.Key}. An error during attempt to get data from {cacheResult.Settings.DataSource}. Error: {cacheResult.Error.FormattedMessage}. Elapsed: {(int)cacheResult.Elapsed().TotalMilliseconds} ms.");
+                    logger.LogInformation($"CACHE ERROR: {cacheResult.SectionName}.{cacheResult.Key}. An error during attempt to get data from {cacheResult.Settings.DataSource}. Error: {cacheResult.Error.FormattedMessage}, {elapsed}.");
             }
 
             return cacheResult;
