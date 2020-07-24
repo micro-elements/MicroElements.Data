@@ -23,7 +23,7 @@ namespace MicroElements.Data.Caching
     /// Represents cache section description: (Name, Type ans Settings).
     /// </summary>
     /// <typeparam name="TValue">Value type.</typeparam>
-    public interface ICacheSectionDescriptor<in TValue> : ICacheSectionDescriptor
+    public interface ICacheSectionDescriptor<TValue> : ICacheSectionDescriptor
     {
         /// <summary>
         /// Gets cache settings.

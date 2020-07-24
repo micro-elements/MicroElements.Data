@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using MicroElements.Functional;
 
 namespace MicroElements.Data.Caching
 {
@@ -23,25 +22,30 @@ namespace MicroElements.Data.Caching
 
         /// <summary>
         /// Gets default DataSource for cache items.
-        /// Can be overriden in cache item factory method. TODO: check usage.
+        /// Can be overriden in cache item factory method.
         /// </summary>
         string DataSource { get; }
 
         /// <summary>
         /// Gets optional exception handler for handling exceptions while factory creation.
         /// </summary>
-        Func<Exception, Message>? HandleError { get; }
+        public Action<ErrorHandleContext>? HandleErrorUntyped { get; }
     }
 
     /// <summary>
     /// Typed cache settings.
     /// </summary>
     /// <typeparam name="TValue">Value type.</typeparam>
-    public interface ICacheSettings<in TValue> : ICacheSettings
+    public interface ICacheSettings<TValue> : ICacheSettings
     {
         /// <summary>
         /// Gets optional value validation func to determine error.
         /// </summary>
-        Func<TValue, Message>? Validate { get; }
+        Action<ValidationContext<TValue>>? Validate { get; }
+
+        /// <summary>
+        /// Gets optional exception handler for handling exceptions while factory creation.
+        /// </summary>
+        Action<ErrorHandleContext<TValue>>? HandleError { get; }
     }
 }

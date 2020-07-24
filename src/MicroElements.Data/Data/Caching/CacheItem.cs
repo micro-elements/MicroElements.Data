@@ -7,7 +7,7 @@ using MicroElements.Metadata;
 namespace MicroElements.Data.Caching
 {
     /// <summary>
-    /// Cache value container.
+    /// Cached data container.
     /// </summary>
     /// <typeparam name="TValue">Data type.</typeparam>
     internal class CacheItem<TValue>
@@ -28,16 +28,16 @@ namespace MicroElements.Data.Caching
         public IPropertyContainer Metadata { get; }
 
         /// <summary>
-        /// Cache context.
+        /// Initializes a new instance of the <see cref="CacheItem{TValue}"/> class.
         /// </summary>
-        public ICacheContext CacheContext { get; }
-
-        public CacheItem(TValue value, Message? error, CacheContext cacheContext)
+        /// <param name="value">Cached data.</param>
+        /// <param name="error">Optional error or message.</param>
+        /// <param name="metadata">Metadata associated with cache item.</param>
+        public CacheItem(TValue value, Message? error, IPropertyContainer metadata)
         {
             Value = value;
             Error = error;
-            CacheContext = cacheContext;
-            Metadata = cacheContext.Metadata;
+            Metadata = metadata;
         }
     }
 }

@@ -15,21 +15,21 @@ using Microsoft.Extensions.Caching.Memory;
 namespace MicroElements.Data.Caching
 {
     /// <summary>
-    /// Обертка над <see cref="IMemoryCache"/>.
-    /// Особенности:
-    /// - ключи представляют собой строки
-    /// - используется блокировка по ключу при получении данных через фабрику
+    /// Represents a wrapper over <see cref="IMemoryCache"/>.
+    /// Details:
+    /// - Cache keys are strings.
+    /// - Synchronized call to factory method by cache key.
     /// </summary>
     /// <typeparam name="TValue">Value type.</typeparam>
     public class CacheSection<TValue> : ICacheSection<TValue>
     {
         private readonly IMemoryCache _memoryCache;
-        private readonly ICacheSettings<TValue> _settings;
-        private readonly Action<ICacheContext>? _configureCacheEntry;
+        private readonly ICacheSectionDescriptor<TValue> _cacheSectionDescriptor;
+        private readonly Action<ICacheEntryContext>? _configureCacheEntry;
         private readonly ConcurrentDictionary<string, SemaphoreSlim> _keys = new ConcurrentDictionary<string, SemaphoreSlim>();
 
         /// <inheritdoc />
-        public string SectionName { get; }
+        public string SectionName => _cacheSectionDescriptor.SectionName;
 
         /// <inheritdoc />
         public Type ValueType => typeof(TValue);
@@ -47,26 +47,27 @@ namespace MicroElements.Data.Caching
         public CacheSection(
             [NotNull] string sectionName,
             [NotNull] IMemoryCache memoryCache,
-            Action<ICacheContext>? configureCacheEntry = null,
+            Action<ICacheEntryContext>? configureCacheEntry = null,
             ICacheSettings<TValue>? settings = null)
         {
-            SectionName = sectionName.AssertArgumentNotNull(nameof(sectionName));
+            sectionName.AssertArgumentNotNull(nameof(sectionName));
+
+            _cacheSectionDescriptor = new CacheSectionDescriptor<TValue>(sectionName, settings ?? CacheSettings<TValue>.Default);
             _memoryCache = memoryCache.AssertArgumentNotNull(nameof(memoryCache));
             _configureCacheEntry = configureCacheEntry;
-            _settings = settings ?? CacheSettings<TValue>.Default;
         }
 
         /// <inheritdoc />
-        public ICacheSettings SettingsUntyped => _settings;
+        public ICacheSettings SettingsUntyped => _cacheSectionDescriptor.CacheSettings;
 
         /// <inheritdoc />
-        public ICacheSettings<TValue> Settings => _settings;
+        public ICacheSettings<TValue> Settings => _cacheSectionDescriptor.CacheSettings;
 
         /// <inheritdoc />
         public override string ToString() => $"Name: {SectionName}, Keys: {_keys.Count}";
 
         /// <inheritdoc />
-        public async Task<CacheResult<TValue>> GetOrCreateAsync(string key, Func<ICacheContext, Task<TValue>> factory)
+        public async Task<CacheResult<TValue>> GetOrCreateAsync(string key, Func<ICacheEntryContext, Task<TValue>> factory)
         {
             using var keyLock = await _keys
                 .GetOrAdd(key, k => new SemaphoreSlim(1))
@@ -76,67 +77,109 @@ namespace MicroElements.Data.Caching
             CacheHitMiss cacheHitMiss = CacheHitMiss.Miss;
             bool isCached = false;
 
-            if (!_memoryCache.TryGetValue(key, out object result))
+            if (_memoryCache.TryGetValue(key, out object result))
+            {
+                // from cache
+                cacheItem = (CacheItem<TValue>)result;
+                cacheHitMiss = CacheHitMiss.Hit;
+                isCached = true;
+            }
+            else
             {
                 // add new to cache
                 var cacheEntry = _memoryCache.CreateEntry(key);
 
-                var cacheContext = new CacheContext(cacheEntry);
+                var cacheEntryContext = new CacheEntryContext(_cacheSectionDescriptor, cacheEntry);
                 var sw = Stopwatch.StartNew();
 
                 try
                 {
                     TValue value = default;
                     Message? message = null;
-                    bool isSuccess;
-                    bool shouldCache;
+                    bool? shouldCache = null;
 
                     try
                     {
-                        value = await factory(cacheContext);
-                        message = _settings.Validate?.Invoke(value);
-                        isSuccess = message == null || message.Severity != MessageSeverity.Error;
+                        // Create value with factory
+                        value = await factory(cacheEntryContext);
+
+                        // Optionally can check whether value is valid and get error message
+                        if (Settings.Validate != null)
+                        {
+                            var validationContext = new ValidationContext<TValue>(_cacheSectionDescriptor, value, cacheEntryContext.Metadata);
+                            Settings.Validate(validationContext);
+
+                            message = validationContext.Error;
+                            shouldCache = validationContext.ShouldCache;
+                        }
                     }
                     catch (Exception e)
                     {
-                        if (_settings.HandleError != null)
-                            message = _settings.HandleError?.Invoke(e);
-                        message ??= new Message("Error while getting value for cache. Section: {SectionName}, Key: {Key}, ErrorMessage: {ErrorMessage}", MessageSeverity.Error);
-                        message = message.WithProperties(
-                            new KeyValuePair<string, object>[]
+                        if (Settings.HandleError != null)
+                        {
+                            var errorHandleContext = new ErrorHandleContext<TValue>(_cacheSectionDescriptor, e, cacheEntryContext.Metadata)
+                            {
+                                Error = CreateErrorMessage(),
+                                Value = default,
+                                ShouldCache = Settings.CacheErrorValue,
+                            };
+                            Settings.HandleError(errorHandleContext);
+
+                            value = errorHandleContext.Value;
+                            message = errorHandleContext.Error;
+                            shouldCache = errorHandleContext.ShouldCache;
+
+                            if (message != null)
+                                message = EnrichMessage(message);
+                        }
+                        else if (Settings.HandleErrorUntyped != null)
+                        {
+                            var errorHandleContext = new ErrorHandleContext(_cacheSectionDescriptor, e, cacheEntryContext.Metadata)
+                            {
+                                Error = CreateErrorMessage(),
+                                ShouldCache = Settings.CacheErrorValue,
+                            };
+                            Settings.HandleErrorUntyped(errorHandleContext);
+
+                            value = default;
+                            message = errorHandleContext.Error;
+                            shouldCache = errorHandleContext.ShouldCache;
+
+                            if (message != null)
+                                message = EnrichMessage(message);
+                        }
+                        else
+                        {
+                            value = default;
+                            message = CreateErrorMessage();
+                        }
+
+                        Message CreateErrorMessage() =>
+                            new Message("Error while getting value for cache. Section: {SectionName}, Key: {Key}, ErrorMessage: {ErrorMessage}", MessageSeverity.Error)
+                                .WithProperties(Properties(), PropertyAddMode.AddIfNotExists);
+
+                        Message EnrichMessage(Message msg) => msg.WithProperties(Properties(), PropertyAddMode.AddIfNotExists);
+
+                        KeyValuePair<string, object>[] Properties() =>
+                            new[]
                             {
                                 new KeyValuePair<string, object>("SectionName", SectionName),
                                 new KeyValuePair<string, object>("Key", key),
                                 new KeyValuePair<string, object>("Exception", e),
                                 new KeyValuePair<string, object>("ErrorMessage", e.Message),
-                            }, PropertyAddMode.AddIfNotExists);
-
-                        isSuccess = false;
-                        shouldCache = _settings.CacheErrorValue;
-
-                        if (!shouldCache)
-                        {
-                            throw new CacheException(message.FormattedMessage, e);
-                        }
+                            };
                     }
 
-                    if (isSuccess)
-                    {
-                        // Valid value
-                        cacheItem = new CacheItem<TValue>(value, null, cacheContext);
-                        shouldCache = true;
-                    }
-                    else
-                    {
-                        // Error value
-                        cacheItem = new CacheItem<TValue>(value, message, cacheContext);
-                        shouldCache = _settings.CacheErrorValue;
-                    }
+                    cacheItem = new CacheItem<TValue>(value, message, cacheEntryContext.Metadata);
 
-                    if (shouldCache)
+                    var isSuccess = message == null || message.Severity != MessageSeverity.Error;
+                    var isError = !isSuccess;
+                    var shouldCacheFinal = shouldCache.GetValueOrDefault(isSuccess || (isError && Settings.CacheErrorValue));
+
+                    if (shouldCacheFinal)
                     {
                         cacheEntry.SetValue(cacheItem);
-                        _configureCacheEntry?.Invoke(cacheContext);
+                        _configureCacheEntry?.Invoke(cacheEntryContext);
 
                         // need to manually call dispose instead of having a using
                         // in case the factory passed in throws, in which case we
@@ -149,20 +192,12 @@ namespace MicroElements.Data.Caching
                 }
                 finally
                 {
-                    cacheContext.Metadata.SetValue(CacheManager.Elapsed, sw.Elapsed);
+                    cacheEntryContext.Metadata.SetValue(CacheManager.Elapsed, sw.Elapsed);
                 }
-            }
-            else
-            {
-                // from cache
-                cacheItem = (CacheItem<TValue>)result;
-                cacheHitMiss = CacheHitMiss.Hit;
-                isCached = true;
             }
 
             CacheResult<TValue> cacheResult = new CacheResult<TValue>(
-                SectionName,
-                Settings,
+                _cacheSectionDescriptor,
                 key,
                 cacheItem.Value,
                 cacheItem.Error,
@@ -181,9 +216,9 @@ namespace MicroElements.Data.Caching
                 .WaitAndGetLockReleaser();
 
             var cacheEntry = _memoryCache.CreateEntry(key);
-            var cacheContext = new CacheContext(cacheEntry);
+            var cacheContext = new CacheEntryContext(_cacheSectionDescriptor, cacheEntry);
 
-            var cacheItem = new CacheItem<TValue>(value, null, cacheContext);
+            var cacheItem = new CacheItem<TValue>(value, null, cacheContext.Metadata);
             cacheEntry.SetValue(cacheItem);
             _configureCacheEntry?.Invoke(cacheContext);
 
@@ -197,32 +232,38 @@ namespace MicroElements.Data.Caching
             _keys.TryRemove(key, out _);
         }
 
-        /// <summary>
-        /// Gets the item associated with this key if present.
-        /// </summary>
-        /// <param name="key">An object identifying the requested entry.</param>
-        /// <param name="value">The located value or null.</param>
-        /// <returns>True if the key was found.</returns>
-        public bool TryGetValue(string key, out TValue value)
-        {
-            bool hasValue = _memoryCache.TryGetValue(key, out object cached);
-            CacheItem<TValue> cacheItem = hasValue ? (CacheItem<TValue>)cached : default;
-            value = hasValue ? cacheItem.Value : default;
-
-            if (!hasValue)
-            {
-                _keys.TryRemove(key, out _);
-            }
-
-            return hasValue;
-        }
-
         /// <inheritdoc />
         public Option<TValue> Get(string key)
         {
-            if (TryGetValue(key, out TValue value))
-                return value;
+            if (_memoryCache.TryGetValue(key, out object cached))
+            {
+                CacheItem<TValue> cacheItem = (CacheItem<TValue>)cached;
+                return cacheItem.Value;
+            }
+
+            _keys.TryRemove(key, out _);
             return Option<TValue>.None;
+        }
+
+        /// <inheritdoc />
+        public CacheResult<TValue> GetCacheEntry(string key)
+        {
+            if (_memoryCache.TryGetValue(key, out object cached))
+            {
+                CacheItem<TValue> cacheItem = (CacheItem<TValue>)cached;
+                return new CacheResult<TValue>(
+                    cacheSection: _cacheSectionDescriptor,
+                    key: key,
+                    value: cacheItem.Value,
+                    error: cacheItem.Error,
+                    metadata: cacheItem.Metadata,
+                    hitMiss: CacheHitMiss.Hit,
+                    isCached: true);
+            }
+
+            _keys.TryRemove(key, out _);
+
+            return new CacheResult<TValue>(cacheSection: _cacheSectionDescriptor, key: key);
         }
 
         /// <inheritdoc/>

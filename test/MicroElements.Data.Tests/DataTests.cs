@@ -65,14 +65,22 @@ namespace MicroElements.Data.Tests
             new CacheSettings<double>()
             {
                 CacheErrorValue = false,
-                Validate = d => d < 0? new Message("Should be greater then 0.", MessageSeverity.Error) : null
+                Validate = context =>
+                {
+                    if(context.Value < 0) 
+                        context.Error = new Message("Should be greater then 0.", MessageSeverity.Error);
+                }
             });
 
         public static ICacheSectionDescriptor<double> Section2 =
             new CacheSettings<double>()
                 .SetCacheErrorValue(false)
                 .SetDataSource("WebService")
-                .SetValidate(d => d < 0 ? new Message("Should be greater then 0.", MessageSeverity.Error) : null)
+                .SetValidate(context =>
+                {
+                    if (context.Value < 0)
+                        context.Error = new Message("Should be greater then 0.", MessageSeverity.Error);
+                })
                 .CreateSectionDescriptor("Section3");
 
     }

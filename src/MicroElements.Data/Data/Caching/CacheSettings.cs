@@ -4,6 +4,7 @@
 using System;
 using MicroElements.Functional;
 
+
 namespace MicroElements.Data.Caching
 {
     /// <summary>
@@ -20,7 +21,7 @@ namespace MicroElements.Data.Caching
             CacheErrorValue = false,
 
             // Does not handle exceptions (rethrow)
-            HandleError = null,
+            HandleErrorUntyped = null,
 
             // Unknown data source.
             DataSource = "Unknown",
@@ -36,7 +37,7 @@ namespace MicroElements.Data.Caching
         public string DataSource { get; set; }
 
         /// <inheritdoc />
-        public Func<Exception, Message>? HandleError { get; set; }
+        public Action<ErrorHandleContext>? HandleErrorUntyped { get; set; }
 
         public CacheSettings() { }
 
@@ -44,12 +45,12 @@ namespace MicroElements.Data.Caching
             ICacheSettings? @base = null,
             bool? cacheErrorValue = null,
             string? dataSource = null,
-            Func<Exception, Message>? handleError = null)
+            Action<ErrorHandleContext>? handleErrorUntyped = null)
         {
             @base ??= Default;
             CacheErrorValue = cacheErrorValue ?? @base.CacheErrorValue;
             DataSource = dataSource ?? @base.DataSource;
-            HandleError = handleError ?? @base.HandleError;
+            HandleErrorUntyped = handleErrorUntyped ?? @base.HandleErrorUntyped;
         }
     }
 
@@ -78,10 +79,13 @@ namespace MicroElements.Data.Caching
         public string DataSource { get; set; }
 
         /// <inheritdoc />
-        public Func<Exception, Message>? HandleError { get; set; }
+        public Action<ErrorHandleContext>? HandleErrorUntyped { get; set; }
 
         /// <inheritdoc />
-        public Func<TValue, Message>? Validate { get; set; }
+        public Action<ErrorHandleContext<TValue>>? HandleError { get; set; }
+
+        /// <inheritdoc />
+        public Action<ValidationContext<TValue>>? Validate { get; set; }
 
         public CacheSettings()
         {
@@ -91,13 +95,15 @@ namespace MicroElements.Data.Caching
             ICacheSettings? @base = null,
             bool? cacheErrorValue = null,
             string? dataSource = null,
-            Func<Exception, Message>? handleError = null,
-            Func<TValue, Message>? validate = null)
+            Action<ErrorHandleContext>? handleErrorUntyped = null,
+            Action<ErrorHandleContext<TValue>>? handleError = null,
+            Action<ValidationContext<TValue>>? validate = null)
         {
             @base ??= Default;
             CacheErrorValue = cacheErrorValue ?? @base.CacheErrorValue;
             DataSource = dataSource ?? @base.DataSource;
-            HandleError = handleError ?? @base.HandleError;
+            HandleErrorUntyped = handleErrorUntyped ?? @base.HandleErrorUntyped;
+            HandleError = handleError;
             Validate = validate;
         }
 
@@ -105,12 +111,14 @@ namespace MicroElements.Data.Caching
             ICacheSettings<TValue>? @base = null,
             bool? cacheErrorValue = null,
             string? dataSource = null,
-            Func<Exception, Message>? handleError = null,
-            Func<TValue, Message>? validate = null)
+            Action<ErrorHandleContext>? handleErrorUntyped = null,
+            Action<ErrorHandleContext<TValue>>? handleError = null,
+            Action<ValidationContext<TValue>>? validate = null)
         {
             @base ??= Default;
             CacheErrorValue = cacheErrorValue ?? @base.CacheErrorValue;
             DataSource = dataSource ?? @base.DataSource;
+            HandleErrorUntyped = handleErrorUntyped ?? @base.HandleErrorUntyped;
             HandleError = handleError ?? @base.HandleError;
             Validate = validate ?? @base.Validate;
         }
@@ -132,19 +140,24 @@ namespace MicroElements.Data.Caching
         public string DataSource { get; }
 
         /// <inheritdoc />
-        public Func<Exception, Message>? HandleError { get; }
+        public Action<ErrorHandleContext>? HandleErrorUntyped { get; }
 
         /// <inheritdoc />
-        public Func<TValue, Message>? Validate { get; }
+        public Action<ErrorHandleContext<TValue>>? HandleError { get; }
+
+        /// <inheritdoc />
+        public Action<ValidationContext<TValue>>? Validate { get; }
 
         public ReadOnlyCacheSettings(
             bool cacheErrorValue,
             string dataSource,
-            Func<Exception, Message>? handleError,
-            Func<TValue, Message>? validate)
+            Action<ErrorHandleContext>? handleErrorUntyped,
+            Action<ErrorHandleContext<TValue>>? handleError,
+            Action<ValidationContext<TValue>>? validate)
         {
             CacheErrorValue = cacheErrorValue;
             DataSource = dataSource;
+            HandleErrorUntyped = handleErrorUntyped;
             HandleError = handleError;
             Validate = validate;
         }
@@ -182,17 +195,22 @@ namespace MicroElements.Data.Caching
             return new CacheSettings<TValue>(cacheSettings, dataSource: dataSource);
         }
 
-        public static ICacheSettings SetHandleError(this ICacheSettings cacheSettings, Func<Exception, Message> handleError)
+        public static ICacheSettings SetHandleErrorUntyped(this ICacheSettings cacheSettings, Action<ErrorHandleContext> handleErrorUntyped)
         {
-            return new CacheSettings(cacheSettings, handleError: handleError);
+            return new CacheSettings(cacheSettings, handleErrorUntyped: handleErrorUntyped);
         }
 
-        public static ICacheSettings<TValue> SetHandleError<TValue>(this ICacheSettings<TValue> cacheSettings, Func<Exception, Message> handleError)
+        public static ICacheSettings<TValue> SetHandleErrorUntyped<TValue>(this ICacheSettings<TValue> cacheSettings, Action<ErrorHandleContext> handleErrorUntyped)
+        {
+            return new CacheSettings<TValue>(cacheSettings, handleErrorUntyped: handleErrorUntyped);
+        }
+
+        public static ICacheSettings<TValue> SetHandleError<TValue>(this ICacheSettings<TValue> cacheSettings, Action<ErrorHandleContext<TValue>>? handleError)
         {
             return new CacheSettings<TValue>(cacheSettings, handleError: handleError);
         }
 
-        public static ICacheSettings<TValue> SetValidate<TValue>(this ICacheSettings<TValue> cacheSettings, Func<TValue, Message> validate)
+        public static ICacheSettings<TValue> SetValidate<TValue>(this ICacheSettings<TValue> cacheSettings, Action<ValidationContext<TValue>> validate)
         {
             return new CacheSettings<TValue>(cacheSettings, validate: validate);
         }
@@ -212,6 +230,7 @@ namespace MicroElements.Data.Caching
             return new ReadOnlyCacheSettings<TValue>(
                 cacheErrorValue: cacheSettings.CacheErrorValue,
                 dataSource: cacheSettings.DataSource,
+                handleErrorUntyped: cacheSettings.HandleErrorUntyped,
                 handleError: cacheSettings.HandleError,
                 validate: cacheSettings.Validate);
         }

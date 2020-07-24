@@ -28,7 +28,7 @@ namespace MicroElements.Data.Caching
         public string Key { get; }
 
         /// <summary>
-        /// Cached value if present and not error <see cref="Error"/>.
+        /// Cached value if present and is not error <see cref="Error"/>.
         /// </summary>
         public TValue Value { get; }
 
@@ -56,8 +56,7 @@ namespace MicroElements.Data.Caching
         /// Initializes a new instance of the <see cref="CacheResult{TValue}"/> struct.
         /// </summary>
         public CacheResult(
-            string sectionName,
-            ICacheSettings settings,
+            ICacheSectionDescriptor<TValue> cacheSection,
             string key,
             TValue value,
             Message? error,
@@ -65,8 +64,8 @@ namespace MicroElements.Data.Caching
             CacheHitMiss hitMiss,
             bool isCached)
         {
-            SectionName = sectionName;
-            Settings = settings;
+            SectionName = cacheSection.SectionName;
+            Settings = cacheSection.CacheSettings;
             Key = key;
             Value = value;
             Error = error;
@@ -75,13 +74,50 @@ namespace MicroElements.Data.Caching
             IsCached = isCached;
         }
 
+        public CacheResult(
+            ICacheSectionDescriptor<TValue> cacheSection,
+            string key)
+        {
+            SectionName = cacheSection.SectionName;
+            Settings = cacheSection.CacheSettings;
+            Key = key;
+
+            Value = default;
+            Error = null;
+            Metadata = null;
+            HitMiss = CacheHitMiss.Miss;
+            IsCached = false;
+        }
+
         /// <summary>
         /// Converts to base type.
         /// </summary>
         /// <param name="cacheResult">Cache result.</param>
         /// <returns>Value if no error or exception.</returns>
         /// <exception cref="CacheException">Cache error.</exception>
-        public static implicit operator TValue(CacheResult<TValue> cacheResult)
-            => cacheResult.Error == null ? cacheResult.Value : throw new CacheException(cacheResult.Error.FormattedMessage, cacheResult.Error.GetException());
+        public static implicit operator TValue(CacheResult<TValue> cacheResult) => cacheResult.GetValueOrThrow();
+
+        /// <summary>
+        /// True if result is in success state.
+        /// </summary>
+        public bool IsSuccess => Error == null || Error.Severity != MessageSeverity.Error;
+
+        /// <summary>
+        /// Result is empty (Not found for example).
+        /// </summary>
+        public bool IsEmpty => Error == null && Metadata == null && HitMiss == CacheHitMiss.Miss && IsCached == false;
+
+        /// <summary>
+        /// Gets value or default.
+        /// </summary>
+        /// <param name="defaultValue">Default value.</param>
+        /// <returns>Value or default value if not success.</returns>
+        public TValue GetValueOrDefault(TValue defaultValue = default) => IsSuccess ? Value : defaultValue;
+
+        /// <summary>
+        /// Gets value or throws <see cref="CacheException"/> if in error state.
+        /// </summary>
+        /// <returns>Value.</returns>
+        public TValue GetValueOrThrow() => IsSuccess ? Value : throw new CacheException(Error.FormattedMessage, Error.GetException());
     }
 }

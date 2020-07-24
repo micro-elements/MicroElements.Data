@@ -29,7 +29,7 @@ namespace MicroElements.Data.Caching
         public static readonly IProperty<string> Source = new Property<string>("Source").WithDescription("The source of value.");
 
         private readonly IMemoryCache _memoryCache;
-        private readonly Action<ICacheContext>? _configureCacheEntry;
+        private readonly Action<ICacheEntryContext>? _configureCacheEntry;
         private readonly ConcurrentDictionary<string, ICacheSection> _sections = new ConcurrentDictionary<string, ICacheSection>();
 
         /// <summary>
@@ -37,7 +37,7 @@ namespace MicroElements.Data.Caching
         /// </summary>
         /// <param name="memoryCache">Provided memory cache.</param>
         /// <param name="configureCacheEntry">Optional cache configure method for all sections.</param>
-        public CacheManager([NotNull] IMemoryCache memoryCache, Action<ICacheContext>? configureCacheEntry = null)
+        public CacheManager([NotNull] IMemoryCache memoryCache, Action<ICacheEntryContext>? configureCacheEntry = null)
         {
             _memoryCache = memoryCache.AssertArgumentNotNull(nameof(memoryCache));
             _configureCacheEntry = configureCacheEntry;
@@ -56,7 +56,7 @@ namespace MicroElements.Data.Caching
         /// <param name="key">Cache key.</param>
         /// <param name="factory">Factory method to create and customize cache item.</param>
         /// <returns><see cref="CacheResult{TValue}"/>.</returns>
-        public async Task<CacheResult<TValue>> GetOrCreateAsync<TValue>(string sectionName, string key, Func<ICacheContext, Task<TValue>> factory)
+        public async Task<CacheResult<TValue>> GetOrCreateAsync<TValue>(string sectionName, string key, Func<ICacheEntryContext, Task<TValue>> factory)
         {
             ICacheSection<TValue> cacheSection = GetOrCreateSection(sectionName, CacheSettings<TValue>.Default);
             return await cacheSection.GetOrCreateAsync(key, factory);
@@ -70,7 +70,7 @@ namespace MicroElements.Data.Caching
         /// <param name="key">Cache key.</param>
         /// <param name="factory">Factory method to create and customize cache item.</param>
         /// <returns><see cref="CacheResult{TValue}"/>.</returns>
-        public async Task<CacheResult<TValue>> GetOrCreateAsync<TValue>(ICacheSectionDescriptor<TValue> sectionDescriptor, string key, Func<ICacheContext, Task<TValue>> factory)
+        public async Task<CacheResult<TValue>> GetOrCreateAsync<TValue>(ICacheSectionDescriptor<TValue> sectionDescriptor, string key, Func<ICacheEntryContext, Task<TValue>> factory)
         {
             var cacheSection = GetOrCreateSection(sectionDescriptor);
             return await cacheSection.GetOrCreateAsync(key, factory);

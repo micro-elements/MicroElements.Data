@@ -9,13 +9,13 @@ namespace MicroElements.Data.Caching
     public enum CacheHitMiss
     {
         /// <summary>
-        /// Cache hit. Item was found in cache.
-        /// </summary>
-        Hit,
-
-        /// <summary>
         /// Cache miss. Item was not found in cache.
         /// </summary>
         Miss,
+
+        /// <summary>
+        /// Cache hit. Item was found in cache.
+        /// </summary>
+        Hit,
     }
 }

@@ -1,3 +1,9 @@
+# 0.4.0
+- Breaking: ValidationContext, ErrorHandleContext
+- ICacheSection.GetCacheEntry
+- CacheResult.GetValueOrDefault, CacheResult.GetValueOrThrow
+- GetAllEntries extension method
+
 # 0.3.0
 - GetAllValues, GetAllKeyValues
 - CacheResult throws CacheException in implicit conversion if result has error

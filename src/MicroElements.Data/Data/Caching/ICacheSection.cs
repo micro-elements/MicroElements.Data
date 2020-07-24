@@ -56,7 +56,7 @@ namespace MicroElements.Data.Caching
         /// <param name="key">Cache key.</param>
         /// <param name="factory">Factory method to create item on cache miss.</param>
         /// <returns>Cache result with extended info.</returns>
-        Task<CacheResult<TValue>> GetOrCreateAsync(string key, Func<ICacheContext, Task<TValue>> factory);
+        Task<CacheResult<TValue>> GetOrCreateAsync(string key, Func<ICacheEntryContext, Task<TValue>> factory);
 
         /// <summary>
         /// Gets optional value by key.
@@ -64,6 +64,13 @@ namespace MicroElements.Data.Caching
         /// <param name="key">Cache key.</param>
         /// <returns>Optional value.</returns>
         Option<TValue> Get(string key);
+
+        /// <summary>
+        /// Gets full cache entry info.
+        /// </summary>
+        /// <param name="key">Cache key.</param>
+        /// <returns>Optional value.</returns>
+        CacheResult<TValue> GetCacheEntry(string key);
 
         /// <summary>
         /// Sets value for <paramref name="key"/>.

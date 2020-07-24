@@ -38,6 +38,25 @@ namespace MicroElements.Data.Caching
         }
 
         /// <summary>
+        /// Gets all cache entries from <see cref="ICacheSection{TValue}"/>.
+        /// </summary>
+        /// <typeparam name="T">Data type.</typeparam>
+        /// <param name="cacheSection">Cache section.</param>
+        /// <returns>Enumerable of <see cref="CacheResult{TValue}"/>.</returns>
+        [return: NotNull]
+        public static IEnumerable<CacheResult<T>> GetAllEntries<T>([NotNull] this ICacheSection<T> cacheSection)
+        {
+            cacheSection.AssertArgumentNotNull(nameof(cacheSection));
+
+            var values = cacheSection
+                .Keys
+                .Select(key => cacheSection.GetCacheEntry(key))
+                .Where(cacheResult => !cacheResult.IsEmpty);
+
+            return values;
+        }
+
+        /// <summary>
         /// Gets all values from <paramref name="cacheManager"/> using <paramref name="sectionDescriptor"/>.
         /// </summary>
         /// <typeparam name="T">Data type.</typeparam>
@@ -52,6 +71,23 @@ namespace MicroElements.Data.Caching
 
             var cacheSection = cacheManager.GetOrCreateSection(sectionDescriptor);
             return cacheSection.GetAllValues();
+        }
+
+        /// <summary>
+        /// Gets all cache entries from <paramref name="cacheManager"/> using <paramref name="sectionDescriptor"/>.
+        /// </summary>
+        /// <typeparam name="T">Data type.</typeparam>
+        /// <param name="cacheManager">Cache manager.</param>
+        /// <param name="sectionDescriptor">Section descriptor to get or create cache section.</param>
+        /// <returns>Enumerable of <see cref="CacheResult{TValue}"/>.</returns>
+        [return: NotNull]
+        public static IEnumerable<CacheResult<T>> GetAllEntries<T>([NotNull] this CacheManager cacheManager, [NotNull] ICacheSectionDescriptor<T> sectionDescriptor)
+        {
+            cacheManager.AssertArgumentNotNull(nameof(cacheManager));
+            sectionDescriptor.AssertArgumentNotNull(nameof(sectionDescriptor));
+
+            var cacheSection = cacheManager.GetOrCreateSection(sectionDescriptor);
+            return cacheSection.GetAllEntries();
         }
 
         /// <summary>
@@ -72,6 +108,26 @@ namespace MicroElements.Data.Caching
                 return Array.Empty<T>();
 
             return cacheSection.GetAllValues();
+        }
+
+        /// <summary>
+        /// Gets all cache entries from <paramref name="cacheManager"/> using <paramref name="sectionName"/>.
+        /// </summary>
+        /// <typeparam name="T">Data type.</typeparam>
+        /// <param name="cacheManager">Cache manager.</param>
+        /// <param name="sectionName">Section name to find cache section.</param>
+        /// <returns>Enumerable of <see cref="CacheResult{TValue}"/>.</returns>
+        [return: NotNull]
+        public static IEnumerable<CacheResult<T>> GetAllEntries<T>([NotNull] this CacheManager cacheManager, [NotNull] string sectionName)
+        {
+            cacheManager.AssertArgumentNotNull(nameof(cacheManager));
+            sectionName.AssertArgumentNotNull(nameof(sectionName));
+
+            var cacheSection = cacheManager.GetSection<T>(sectionName);
+            if (cacheSection == null)
+                return Array.Empty<CacheResult<T>>();
+
+            return cacheSection.GetAllEntries();
         }
 
         /// <summary>
@@ -138,16 +194,16 @@ namespace MicroElements.Data.Caching
         /// <summary>
         /// Logs <see cref="CacheResult{TValue}"/> advanced info: CACHE HIT, CACHE MISS, CACHE ERROR.
         /// </summary>
-        public static async Task<CacheResult<T>> WithLogging<T>(this Task<CacheResult<T>> cacheResultTask, ILogger logger)
+        public static async Task<CacheResult<T>> WriteToLog<T>(this Task<CacheResult<T>> cacheResultTask, ILogger logger)
         {
             var cacheResult = await cacheResultTask;
-            return cacheResult.WithLogging(logger);
+            return cacheResult.WriteToLog(logger);
         }
 
         /// <summary>
         /// Logs <see cref="CacheResult{TValue}"/> advanced info: CACHE HIT, CACHE MISS, CACHE ERROR.
         /// </summary>
-        public static CacheResult<T> WithLogging<T>(this in CacheResult<T> cacheResult, ILogger logger)
+        public static CacheResult<T> WriteToLog<T>(this in CacheResult<T> cacheResult, ILogger logger)
         {
             string elapsed = $"Elapsed: {(int)cacheResult.Elapsed().TotalMilliseconds} ms.";
             if (cacheResult.HitMiss == CacheHitMiss.Hit)

@@ -7,10 +7,15 @@ using Microsoft.Extensions.Caching.Memory;
 namespace MicroElements.Data.Caching
 {
     /// <summary>
-    /// CacheContext uses for cache item customization.
+    /// Use <see cref="ICacheEntryContext"/> to customize cache entry.
     /// </summary>
-    public interface ICacheContext
+    public interface ICacheEntryContext
     {
+        /// <summary>
+        /// Cache section descriptor.
+        /// </summary>
+        public ICacheSectionDescriptor CacheSection { get; }
+
         /// <summary>
         /// Cache entry to configure.
         /// </summary>
@@ -30,16 +35,27 @@ namespace MicroElements.Data.Caching
     /// <summary>
     /// CacheContext uses for cache item customization.
     /// </summary>
-    internal class CacheContext : ICacheContext
+    internal class CacheEntryContext : ICacheEntryContext
     {
+        /// <summary>
+        /// Cache section descriptor.
+        /// </summary>
+        public ICacheSectionDescriptor CacheSection { get; }
+
         /// <inheritdoc />
         public ICacheEntry CacheEntry { get; }
 
         /// <inheritdoc />
         public IMutablePropertyContainer Metadata { get; }
 
-        public CacheContext(ICacheEntry cacheEntry)
+        /// <summary>
+        /// Initializes a new instance of the <see cref="CacheEntryContext"/> class.
+        /// </summary>
+        /// <param name="cacheSection">Cache section descriptor.</param>
+        /// <param name="cacheEntry">Cache entry to configure.</param>
+        public CacheEntryContext(ICacheSectionDescriptor cacheSection, ICacheEntry cacheEntry)
         {
+            CacheSection = cacheSection;
             CacheEntry = cacheEntry;
             Metadata = new MutablePropertyContainer();
         }
