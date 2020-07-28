@@ -19,11 +19,6 @@ namespace MicroElements.Data.Caching
         string SectionName { get; }
 
         /// <summary>
-        /// Gets value type that cache section holds.
-        /// </summary>
-        Type ValueType { get; }
-
-        /// <summary>
         /// Gets section options.
         /// </summary>
         ICacheSettings SettingsUntyped { get; }

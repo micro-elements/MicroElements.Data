@@ -32,7 +32,10 @@ namespace MicroElements.Data.Caching
         public string SectionName => _cacheSectionDescriptor.SectionName;
 
         /// <inheritdoc />
-        public Type ValueType => typeof(TValue);
+        public ICacheSettings SettingsUntyped => _cacheSectionDescriptor.CacheSettings;
+
+        /// <inheritdoc />
+        public ICacheSettings<TValue> Settings => _cacheSectionDescriptor.CacheSettings;
 
         /// <inheritdoc />
         public IReadOnlyCollection<string> Keys => _keys.Keys.ToList();
@@ -56,12 +59,6 @@ namespace MicroElements.Data.Caching
             _memoryCache = memoryCache.AssertArgumentNotNull(nameof(memoryCache));
             _configureCacheEntry = configureCacheEntry;
         }
-
-        /// <inheritdoc />
-        public ICacheSettings SettingsUntyped => _cacheSectionDescriptor.CacheSettings;
-
-        /// <inheritdoc />
-        public ICacheSettings<TValue> Settings => _cacheSectionDescriptor.CacheSettings;
 
         /// <inheritdoc />
         public override string ToString() => $"Name: {SectionName}, Keys: {_keys.Count}";
