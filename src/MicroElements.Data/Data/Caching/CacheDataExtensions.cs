@@ -5,10 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using System.Threading.Tasks;
 using MicroElements.Functional;
-using MicroElements.Metadata;
-using Microsoft.Extensions.Logging;
 
 namespace MicroElements.Data.Caching
 {
@@ -184,41 +181,6 @@ namespace MicroElements.Data.Caching
                 return Array.Empty<(string, T)>();
 
             return cacheSection.GetAllKeyValues();
-        }
-
-        /// <summary>
-        /// Gets <see cref="CacheManager.Elapsed"/> value.
-        /// </summary>
-        public static TimeSpan Elapsed(this IMetadataProvider provider) => provider.Metadata.GetValue(CacheManager.Elapsed);
-
-        /// <summary>
-        /// Logs <see cref="CacheResult{TValue}"/> advanced info: CACHE HIT, CACHE MISS, CACHE ERROR.
-        /// </summary>
-        public static async Task<CacheResult<T>> WriteToLog<T>(this Task<CacheResult<T>> cacheResultTask, ILogger logger)
-        {
-            var cacheResult = await cacheResultTask;
-            return cacheResult.WriteToLog(logger);
-        }
-
-        /// <summary>
-        /// Logs <see cref="CacheResult{TValue}"/> advanced info: CACHE HIT, CACHE MISS, CACHE ERROR.
-        /// </summary>
-        public static CacheResult<T> WriteToLog<T>(this in CacheResult<T> cacheResult, ILogger logger)
-        {
-            string elapsed = $"Elapsed: {(int)cacheResult.Elapsed().TotalMilliseconds} ms.";
-            if (cacheResult.HitMiss == CacheHitMiss.Hit)
-            {
-                logger.LogInformation($"CACHE HIT : {cacheResult.SectionName}.{cacheResult.Key}. Data was found in Cache, {elapsed}");
-            }
-            else if (cacheResult.HitMiss == CacheHitMiss.Miss)
-            {
-                if (cacheResult.Error == null)
-                    logger.LogInformation($"CACHE MISS: {cacheResult.SectionName}.{cacheResult.Key}. Data was successfully retrieved from {cacheResult.Settings.DataSource}, {elapsed}.");
-                else
-                    logger.LogInformation($"CACHE ERROR: {cacheResult.SectionName}.{cacheResult.Key}. An error during attempt to get data from {cacheResult.Settings.DataSource}. Error: {cacheResult.Error.FormattedMessage}, {elapsed}.");
-            }
-
-            return cacheResult;
         }
     }
 }

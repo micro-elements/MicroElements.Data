@@ -189,7 +189,7 @@ namespace MicroElements.Data.Caching
                 }
                 finally
                 {
-                    cacheEntryContext.Metadata.SetValue(CacheManager.Elapsed, sw.Elapsed);
+                    cacheEntryContext.Metadata.SetValue(CacheResult.Elapsed, sw.Elapsed);
                 }
             }
 
@@ -260,7 +260,7 @@ namespace MicroElements.Data.Caching
 
             _keys.TryRemove(key, out _);
 
-            return new CacheResult<TValue>(cacheSection: _cacheSectionDescriptor, key: key);
+            return CacheResult.Empty(_cacheSectionDescriptor, key);
         }
 
         /// <inheritdoc/>

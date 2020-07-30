@@ -1,3 +1,6 @@
+# 0.5.0
+- CacheResult extensions for usability
+
 # 0.4.0
 - Breaking: ValidationContext, ErrorHandleContext
 - ICacheSection.GetCacheEntry

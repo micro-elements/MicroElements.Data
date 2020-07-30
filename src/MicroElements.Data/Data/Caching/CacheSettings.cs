@@ -2,8 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using MicroElements.Functional;
-
 
 namespace MicroElements.Data.Caching
 {
@@ -195,36 +193,107 @@ namespace MicroElements.Data.Caching
             return new CacheSettings<TValue>(cacheSettings, dataSource: dataSource);
         }
 
+        /// <summary>
+        /// Cache does not process exceptions in factory.
+        /// Use <see cref="CacheResult{TValue}.GetValueOrThrow"/> to rethrow catched exception.
+        /// Sets <see cref="ICacheSettings.HandleErrorUntyped"/> to null.
+        /// </summary>
+        /// <param name="cacheSettings">Source cache settings.</param>
+        /// <returns>New instance of <see cref="ICacheSettings"/>.</returns>
+        public static ICacheSettings DoNotHandleErrors(this ICacheSettings cacheSettings)
+        {
+            return new CacheSettings(cacheSettings, handleErrorUntyped: null);
+        }
+
+        /// <summary>
+        /// Cache does not process exceptions in factory.
+        /// Use <see cref="CacheResult{TValue}.GetValueOrThrow"/> to rethrow catched exception.
+        /// Sets <see cref="ICacheSettings.HandleErrorUntyped"/> and <see cref="ICacheSettings{TValue}.HandleError"/> to null.
+        /// </summary>
+        /// <typeparam name="TValue">Value type.</typeparam>
+        /// <param name="cacheSettings">Source cache settings.</param>
+        /// <returns>New instance of <see cref="ICacheSettings{TValue}"/>.</returns>
+        public static ICacheSettings<TValue> DoNotHandleErrors<TValue>(this ICacheSettings<TValue> cacheSettings)
+        {
+            return new CacheSettings<TValue>(cacheSettings, handleErrorUntyped: null, handleError: null);
+        }
+
+        /// <summary>
+        /// Allows to override default error handling.
+        /// </summary>
+        /// <param name="cacheSettings">Source cache settings.</param>
+        /// <param name="handleErrorUntyped">Action to handle exceptions.</param>
+        /// <returns>New instance of <see cref="ICacheSettings"/>.</returns>
         public static ICacheSettings SetHandleErrorUntyped(this ICacheSettings cacheSettings, Action<ErrorHandleContext> handleErrorUntyped)
         {
             return new CacheSettings(cacheSettings, handleErrorUntyped: handleErrorUntyped);
         }
 
+        /// <summary>
+        /// Allows to override default error handling.
+        /// </summary>
+        /// <typeparam name="TValue">Value type.</typeparam>
+        /// <param name="cacheSettings">Source cache settings.</param>
+        /// <param name="handleErrorUntyped">Action to handle exceptions.</param>
+        /// <returns>New instance of <see cref="ICacheSettings"/>.</returns>
         public static ICacheSettings<TValue> SetHandleErrorUntyped<TValue>(this ICacheSettings<TValue> cacheSettings, Action<ErrorHandleContext> handleErrorUntyped)
         {
             return new CacheSettings<TValue>(cacheSettings, handleErrorUntyped: handleErrorUntyped);
         }
 
+        /// <summary>
+        /// Allows to override default error handling.
+        /// </summary>
+        /// <typeparam name="TValue">Value type.</typeparam>
+        /// <param name="cacheSettings">Source cache settings.</param>
+        /// <param name="handleError">Action to handle exceptions.</param>
+        /// <returns>New instance of <see cref="ICacheSettings{TValue}"/>.</returns>
         public static ICacheSettings<TValue> SetHandleError<TValue>(this ICacheSettings<TValue> cacheSettings, Action<ErrorHandleContext<TValue>>? handleError)
         {
             return new CacheSettings<TValue>(cacheSettings, handleError: handleError);
         }
 
+        /// <summary>
+        /// Allows to override default validation.
+        /// </summary>
+        /// <typeparam name="TValue">Value type.</typeparam>
+        /// <param name="cacheSettings">Source cache settings.</param>
+        /// <param name="validate">Action to handle validation.</param>
+        /// <returns>New instance of <see cref="ICacheSettings"/>.</returns>
         public static ICacheSettings<TValue> SetValidate<TValue>(this ICacheSettings<TValue> cacheSettings, Action<ValidationContext<TValue>> validate)
         {
             return new CacheSettings<TValue>(cacheSettings, validate: validate);
         }
 
+        /// <summary>
+        /// Converts to typed <see cref="ICacheSettings{TValue}"/>.
+        /// </summary>
+        /// <typeparam name="TValue">Value type.</typeparam>
+        /// <param name="cacheSettings">Source cache settings.</param>
+        /// <returns>New instance of <see cref="ICacheSettings{TValue}"/>.</returns>
         public static ICacheSettings<TValue> Typed<TValue>(this ICacheSettings cacheSettings)
         {
             return new CacheSettings<TValue>(cacheSettings);
         }
 
+        /// <summary>
+        /// Creates new <see cref="ICacheSectionDescriptor{TValue}"/>.
+        /// </summary>
+        /// <typeparam name="TValue">Value type.</typeparam>
+        /// <param name="cacheSettings">Source cache settings.</param>
+        /// <param name="sectionName">Cache section name.</param>
+        /// <returns>New instance of <see cref="ICacheSectionDescriptor{TValue}"/>.</returns>
         public static ICacheSectionDescriptor<TValue> CreateSectionDescriptor<TValue>(this ICacheSettings<TValue> cacheSettings, string sectionName)
         {
             return new CacheSectionDescriptor<TValue>(sectionName, cacheSettings.AsReadOnly());
         }
 
+        /// <summary>
+        /// Creates readonly wrapper for <see cref="ICacheSettings{TValue}"/>.
+        /// </summary>
+        /// <typeparam name="TValue">Value type.</typeparam>
+        /// <param name="cacheSettings">Source cache settings.</param>
+        /// <returns>New instance of <see cref="ICacheSettings{TValue}"/>.</returns>
         public static ICacheSettings<TValue> AsReadOnly<TValue>(this ICacheSettings<TValue> cacheSettings)
         {
             return new ReadOnlyCacheSettings<TValue>(

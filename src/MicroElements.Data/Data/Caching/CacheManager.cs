@@ -8,7 +8,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading.Tasks;
 using MicroElements.Functional;
-using MicroElements.Metadata;
 using Microsoft.Extensions.Caching.Memory;
 
 namespace MicroElements.Data.Caching
@@ -18,16 +17,6 @@ namespace MicroElements.Data.Caching
     /// </summary>
     public class CacheManager
     {
-        /// <summary>
-        /// Time elapsed on getting value.
-        /// </summary>
-        public static readonly IProperty<TimeSpan> Elapsed = new Property<TimeSpan>("Elapsed").WithDescription("Time elapsed on getting value.");
-
-        /// <summary>
-        /// The source of value.
-        /// </summary>
-        public static readonly IProperty<string> Source = new Property<string>("Source").WithDescription("The source of value.");
-
         private readonly IMemoryCache _memoryCache;
         private readonly Action<ICacheEntryContext>? _configureCacheEntry;
         private readonly ConcurrentDictionary<string, ICacheSection> _sections = new ConcurrentDictionary<string, ICacheSection>();

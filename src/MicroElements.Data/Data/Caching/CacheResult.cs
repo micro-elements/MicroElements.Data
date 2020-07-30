@@ -1,6 +1,7 @@
 ﻿// Copyright (c) MicroElements. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using MicroElements.Functional;
 using MicroElements.Metadata;
 
@@ -74,21 +75,6 @@ namespace MicroElements.Data.Caching
             IsCached = isCached;
         }
 
-        public CacheResult(
-            ICacheSectionDescriptor<TValue> cacheSection,
-            string key)
-        {
-            SectionName = cacheSection.SectionName;
-            Settings = cacheSection.CacheSettings;
-            Key = key;
-
-            Value = default;
-            Error = null;
-            Metadata = null;
-            HitMiss = CacheHitMiss.Miss;
-            IsCached = false;
-        }
-
         /// <summary>
         /// Converts to base type.
         /// </summary>
@@ -108,16 +94,69 @@ namespace MicroElements.Data.Caching
         public bool IsEmpty => Error == null && Metadata == null && HitMiss == CacheHitMiss.Miss && IsCached == false;
 
         /// <summary>
-        /// Gets value or default.
+        /// Gets <see cref="Value"/>.
+        /// </summary>
+        /// <returns>Value.</returns>
+        public TValue GetValue() => Value;
+
+        /// <summary>
+        /// Gets <see cref="Value"/> if <see cref="IsSuccess"/> or default if error.
         /// </summary>
         /// <param name="defaultValue">Default value.</param>
         /// <returns>Value or default value if not success.</returns>
         public TValue GetValueOrDefault(TValue defaultValue = default) => IsSuccess ? Value : defaultValue;
 
         /// <summary>
-        /// Gets value or throws <see cref="CacheException"/> if in error state.
+        /// Gets <see cref="Value"/> if <see cref="IsSuccess"/> or throws <see cref="CacheException"/> if in error state.
         /// </summary>
         /// <returns>Value.</returns>
         public TValue GetValueOrThrow() => IsSuccess ? Value : throw new CacheException(Error.FormattedMessage, Error.GetException());
+    }
+
+    /// <summary>
+    /// CacheResult extensions.
+    /// </summary>
+    public static class CacheResult
+    {
+        /// <summary>
+        /// Time elapsed on getting value.
+        /// </summary>
+        public static readonly IProperty<TimeSpan> Elapsed = new Property<TimeSpan>("Elapsed").WithDescription("Time elapsed on getting value.");
+
+        /// <summary>
+        /// The source of value.
+        /// </summary>
+        public static readonly IProperty<string> DataSource = new Property<string>("DataSource").WithDescription("The source of value.");
+
+        /// <summary>
+        /// Gets <see cref="CacheResult.Elapsed"/> value.
+        /// </summary>
+        public static TimeSpan GetElapsed(this IMetadataProvider provider) => provider.Metadata.GetValue(CacheResult.Elapsed);
+
+        /// <summary>
+        /// Gets <see cref="CacheResult.DataSource"/> value.
+        /// </summary>
+        public static string GetDataSource(this IMetadataProvider provider) => provider.Metadata.GetValue(CacheResult.DataSource);
+
+        /// <summary>
+        /// Creates an empty result.
+        /// </summary>
+        /// <typeparam name="TValue">Value type.</typeparam>
+        /// <param name="cacheSection">Owner cache section.</param>
+        /// <param name="key">Cache key.</param>
+        /// <returns>Empty cache result.</returns>
+        public static CacheResult<TValue> Empty<TValue>(
+            ICacheSectionDescriptor<TValue> cacheSection,
+            string key)
+        {
+            return new CacheResult<TValue>(
+                cacheSection,
+                key,
+                value: default,
+                error: null,
+                metadata: null,
+                hitMiss: CacheHitMiss.Miss,
+                isCached: false);
+        }
     }
 }
