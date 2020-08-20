@@ -1,3 +1,6 @@
+# 0.6.0
+- Added optional configure action to ICacheSetction.Set
+
 # 0.5.0
 - CacheResult extensions for usability
 

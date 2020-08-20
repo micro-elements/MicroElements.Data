@@ -206,7 +206,7 @@ namespace MicroElements.Data.Caching
         }
 
         /// <inheritdoc/>
-        public void Set(string key, TValue value)
+        public void Set(string key, TValue value, Action<ICacheEntryContext>? configure = null)
         {
             using var keyLock = _keys
                 .GetOrAdd(key, k => new SemaphoreSlim(1))
@@ -217,7 +217,12 @@ namespace MicroElements.Data.Caching
 
             var cacheItem = new CacheItem<TValue>(value, null, cacheContext.Metadata);
             cacheEntry.SetValue(cacheItem);
+
+            // Section level configure
             _configureCacheEntry?.Invoke(cacheContext);
+
+            // Item level configure
+            configure?.Invoke(cacheContext);
 
             cacheEntry.Dispose();
         }

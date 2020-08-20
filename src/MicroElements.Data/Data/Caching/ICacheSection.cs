@@ -72,7 +72,8 @@ namespace MicroElements.Data.Caching
         /// </summary>
         /// <param name="key">Cache key.</param>
         /// <param name="value">Value to cache.</param>
-        void Set(string key, TValue value);
+        /// <param name="configure">Optional cache item configure action.</param>
+        void Set(string key, TValue value, Action<ICacheEntryContext>? configure = null);
 
         /// <summary>
         /// Removes value by key.
