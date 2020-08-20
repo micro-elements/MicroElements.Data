@@ -1,3 +1,8 @@
+# 0.7.0
+- Extracted interfaces ICacheResult and ICacheResult<T> from CacheResult<>
+- Added ICacheSection.GetCacheEntryUntyped
+- Added GetAllEntriesUntyped extensions
+
 # 0.6.0
 - Added optional configure action to ICacheSetction.Set
 

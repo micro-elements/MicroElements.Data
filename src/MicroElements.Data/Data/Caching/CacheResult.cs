@@ -10,8 +10,66 @@ namespace MicroElements.Data.Caching
     /// <summary>
     /// Represents cache result.
     /// </summary>
+    public interface ICacheResult
+    {
+        /// <summary>
+        /// Section name.
+        /// </summary>
+        string SectionName { get; }
+
+        /// <summary>
+        /// Cache settings.
+        /// </summary>
+        ICacheSettings Settings { get; }
+
+        /// <summary>
+        /// Cache key.
+        /// </summary>
+        string Key { get; }
+
+        /// <summary>
+        /// Cached value if present and is not error <see cref="Error"/>.
+        /// </summary>
+        object? ValueUntyped { get; }
+
+        /// <summary>
+        /// Optional error.
+        /// </summary>
+        Message? Error { get; }
+
+        /// <summary>
+        /// Metadata associated with cache item.
+        /// </summary>
+        IPropertyContainer Metadata { get; }
+
+        /// <summary>
+        /// Cache hit or miss.
+        /// </summary>
+        CacheHitMiss HitMiss { get; }
+
+        /// <summary>
+        /// Returns true if item was cached.
+        /// </summary>
+        bool IsCached { get; }
+    }
+
+    /// <summary>
+    /// Represents typed cache result.
+    /// </summary>
     /// <typeparam name="TValue">Value type.</typeparam>
-    public readonly struct CacheResult<TValue> : IMetadataProvider
+    public interface ICacheResult<TValue> : ICacheResult
+    {
+        /// <summary>
+        /// Cached value if present and is not error <see cref="Error"/>.
+        /// </summary>
+        TValue Value { get; }
+    }
+
+    /// <summary>
+    /// Represents typed cache result.
+    /// </summary>
+    /// <typeparam name="TValue">Value type.</typeparam>
+    public readonly struct CacheResult<TValue> : ICacheResult<TValue>, IMetadataProvider
     {
         /// <summary>
         /// Section name.
@@ -32,6 +90,11 @@ namespace MicroElements.Data.Caching
         /// Cached value if present and is not error <see cref="Error"/>.
         /// </summary>
         public TValue Value { get; }
+
+        /// <summary>
+        /// Cached value if present and is not error <see cref="Error"/>.
+        /// </summary>
+        public object? ValueUntyped => Value;
 
         /// <summary>
         /// Optional error.

@@ -54,6 +54,25 @@ namespace MicroElements.Data.Caching
         }
 
         /// <summary>
+        /// Gets all cache entries from <see cref="ICacheSection{TValue}"/>.
+        /// </summary>
+        /// <typeparam name="T">Data type.</typeparam>
+        /// <param name="cacheSection">Cache section.</param>
+        /// <returns>Enumerable of <see cref="CacheResult{TValue}"/>.</returns>
+        [return: NotNull]
+        public static IEnumerable<ICacheResult> GetAllEntriesUntyped([NotNull] this ICacheSection cacheSection)
+        {
+            cacheSection.AssertArgumentNotNull(nameof(cacheSection));
+
+            var values = cacheSection
+                .Keys
+                .Select(key => cacheSection.GetCacheEntryUntyped(key))
+                .Where(cacheResult => cacheResult != null);
+
+            return values;
+        }
+
+        /// <summary>
         /// Gets all values from <paramref name="cacheManager"/> using <paramref name="sectionDescriptor"/>.
         /// </summary>
         /// <typeparam name="T">Data type.</typeparam>

@@ -268,6 +268,12 @@ namespace MicroElements.Data.Caching
             return CacheResult.Empty(_cacheSectionDescriptor, key);
         }
 
+        /// <inheritdoc />
+        public ICacheResult GetCacheEntryUntyped(string key)
+        {
+            return GetCacheEntry(key);
+        }
+
         /// <inheritdoc/>
         public void Clear()
         {

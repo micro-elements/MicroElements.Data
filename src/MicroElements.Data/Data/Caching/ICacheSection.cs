@@ -29,6 +29,13 @@ namespace MicroElements.Data.Caching
         IReadOnlyCollection<string> Keys { get; }
 
         /// <summary>
+        /// Gets full cache entry info.
+        /// </summary>
+        /// <param name="key">Cache key.</param>
+        /// <returns>Optional value.</returns>
+        ICacheResult GetCacheEntryUntyped(string key);
+
+        /// <summary>
         /// Clears section items.
         /// </summary>
         void Clear();
