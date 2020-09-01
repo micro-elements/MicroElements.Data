@@ -227,6 +227,41 @@ namespace MicroElements.Data.Caching
             cacheEntry.Dispose();
         }
 
+        /// <inheritdoc />
+        public CacheResult<TValue> GetCacheEntry(string key)
+        {
+            CacheResult<TValue>? cacheResult = GetCacheEntryInternal(key);
+            if (cacheResult.HasValue)
+                return cacheResult.Value;
+
+            // Try to get item with lock (key can be in list but item is not added already because if long factory creation)
+            using var keyLock = _keys
+                .GetOrAdd(key, k => new SemaphoreSlim(1))
+                .WaitAndGetLockReleaser();
+
+            cacheResult = GetCacheEntryInternal(key);
+            if (cacheResult.HasValue)
+                return cacheResult.Value;
+
+            // MemoryCache does not contain item (expired or absent) so remove key to be in sync.
+            _keys.TryRemove(key, out _);
+
+            return CacheResult.Empty(_cacheSectionDescriptor, key);
+        }
+
+        /// <inheritdoc />
+        public Option<TValue> Get(string key)
+        {
+            CacheResult<TValue> cacheResult = GetCacheEntry(key);
+            return !cacheResult.IsEmpty() ? cacheResult.Value : Option<TValue>.None;
+        }
+
+        /// <inheritdoc />
+        public ICacheResult GetCacheEntryUntyped(string key)
+        {
+            return GetCacheEntry(key);
+        }
+
         /// <inheritdoc/>
         public void Remove(string key)
         {
@@ -234,21 +269,16 @@ namespace MicroElements.Data.Caching
             _keys.TryRemove(key, out _);
         }
 
-        /// <inheritdoc />
-        public Option<TValue> Get(string key)
+        /// <inheritdoc/>
+        public void Clear()
         {
-            if (_memoryCache.TryGetValue(key, out object cached))
+            foreach (string key in Keys)
             {
-                CacheItem<TValue> cacheItem = (CacheItem<TValue>)cached;
-                return cacheItem.Value;
+                Remove(key);
             }
-
-            _keys.TryRemove(key, out _);
-            return Option<TValue>.None;
         }
 
-        /// <inheritdoc />
-        public CacheResult<TValue> GetCacheEntry(string key)
+        private CacheResult<TValue>? GetCacheEntryInternal(string key)
         {
             if (_memoryCache.TryGetValue(key, out object cached))
             {
@@ -263,24 +293,7 @@ namespace MicroElements.Data.Caching
                     isCached: true);
             }
 
-            _keys.TryRemove(key, out _);
-
-            return CacheResult.Empty(_cacheSectionDescriptor, key);
-        }
-
-        /// <inheritdoc />
-        public ICacheResult GetCacheEntryUntyped(string key)
-        {
-            return GetCacheEntry(key);
-        }
-
-        /// <inheritdoc/>
-        public void Clear()
-        {
-            foreach (string key in Keys)
-            {
-                Remove(key);
-            }
+            return null;
         }
     }
 }

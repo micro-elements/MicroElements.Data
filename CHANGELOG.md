@@ -1,3 +1,6 @@
+# 0.9.0
+- Fixed bug with removing key on cache enumeration while cache item is creating with long factory method
+
 # 0.8.0
 - IsSuccess and IsEmpty moved to extensions
 
