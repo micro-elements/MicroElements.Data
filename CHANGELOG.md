@@ -1,3 +1,6 @@
+# 0.8.0
+- IsSuccess and IsEmpty moved to extensions
+
 # 0.7.0
 - Extracted interfaces ICacheResult and ICacheResult<T> from CacheResult<>
 - Added ICacheSection.GetCacheEntryUntyped

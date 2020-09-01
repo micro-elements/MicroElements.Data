@@ -10,7 +10,7 @@ namespace MicroElements.Data.Caching
     /// <summary>
     /// Represents cache result.
     /// </summary>
-    public interface ICacheResult
+    public interface ICacheResult : IMetadataProvider
     {
         /// <summary>
         /// Section name.
@@ -38,11 +38,6 @@ namespace MicroElements.Data.Caching
         Message? Error { get; }
 
         /// <summary>
-        /// Metadata associated with cache item.
-        /// </summary>
-        IPropertyContainer Metadata { get; }
-
-        /// <summary>
         /// Cache hit or miss.
         /// </summary>
         CacheHitMiss HitMiss { get; }
@@ -60,7 +55,7 @@ namespace MicroElements.Data.Caching
     public interface ICacheResult<TValue> : ICacheResult
     {
         /// <summary>
-        /// Cached value if present and is not error <see cref="Error"/>.
+        /// Cached value if present and is not error <see cref="ICacheResult.Error"/>.
         /// </summary>
         TValue Value { get; }
     }
@@ -69,7 +64,7 @@ namespace MicroElements.Data.Caching
     /// Represents typed cache result.
     /// </summary>
     /// <typeparam name="TValue">Value type.</typeparam>
-    public readonly struct CacheResult<TValue> : ICacheResult<TValue>, IMetadataProvider
+    public readonly struct CacheResult<TValue> : ICacheResult<TValue>
     {
         /// <summary>
         /// Section name.
@@ -147,33 +142,23 @@ namespace MicroElements.Data.Caching
         public static implicit operator TValue(CacheResult<TValue> cacheResult) => cacheResult.GetValueOrThrow();
 
         /// <summary>
-        /// True if result is in success state.
-        /// </summary>
-        public bool IsSuccess => Error == null || Error.Severity != MessageSeverity.Error;
-
-        /// <summary>
-        /// Result is empty (Not found for example).
-        /// </summary>
-        public bool IsEmpty => Error == null && Metadata == null && HitMiss == CacheHitMiss.Miss && IsCached == false;
-
-        /// <summary>
         /// Gets <see cref="Value"/>.
         /// </summary>
         /// <returns>Value.</returns>
         public TValue GetValue() => Value;
 
         /// <summary>
-        /// Gets <see cref="Value"/> if <see cref="IsSuccess"/> or default if error.
+        /// Gets <see cref="Value"/> if <see cref="CacheResult.IsSuccess"/> or default if error.
         /// </summary>
         /// <param name="defaultValue">Default value.</param>
         /// <returns>Value or default value if not success.</returns>
-        public TValue GetValueOrDefault(TValue defaultValue = default) => IsSuccess ? Value : defaultValue;
+        public TValue GetValueOrDefault(TValue defaultValue = default) => this.IsSuccess() ? Value : defaultValue;
 
         /// <summary>
-        /// Gets <see cref="Value"/> if <see cref="IsSuccess"/> or throws <see cref="CacheException"/> if in error state.
+        /// Gets <see cref="Value"/> if <see cref="CacheResult.IsSuccess"/> or throws <see cref="CacheException"/> if in error state.
         /// </summary>
         /// <returns>Value.</returns>
-        public TValue GetValueOrThrow() => IsSuccess ? Value : throw new CacheException(Error.FormattedMessage, Error.GetException());
+        public TValue GetValueOrThrow() => this.IsSuccess() ? Value : throw new CacheException(Error.FormattedMessage, Error.GetException());
     }
 
     /// <summary>
@@ -202,6 +187,26 @@ namespace MicroElements.Data.Caching
         public static string GetDataSource(this IMetadataProvider provider) => provider.Metadata.GetValue(CacheResult.DataSource);
 
         /// <summary>
+        /// True if result is in success state.
+        /// </summary>
+        public static bool IsSuccess(this ICacheResult result) => result.Error == null || result.Error.Severity != MessageSeverity.Error;
+
+        /// <summary>
+        /// True if result is in success state.
+        /// </summary>
+        public static bool IsSuccess<T>(this in CacheResult<T> result) => result.Error == null || result.Error.Severity != MessageSeverity.Error;
+
+        /// <summary>
+        /// Result is empty (Not found for example).
+        /// </summary>
+        public static bool IsEmpty(this ICacheResult result) => result.Error == null && (result.Metadata == null || result.Metadata == PropertyContainer.Empty) && result.HitMiss == CacheHitMiss.Miss && result.IsCached == false;
+
+        /// <summary>
+        /// Result is empty (Not found for example).
+        /// </summary>
+        public static bool IsEmpty<T>(this in CacheResult<T> result) => result.Error == null && (result.Metadata == null || result.Metadata == PropertyContainer.Empty) && result.HitMiss == CacheHitMiss.Miss && result.IsCached == false;
+
+        /// <summary>
         /// Creates an empty result.
         /// </summary>
         /// <typeparam name="TValue">Value type.</typeparam>
@@ -217,7 +222,7 @@ namespace MicroElements.Data.Caching
                 key,
                 value: default,
                 error: null,
-                metadata: null,
+                metadata: PropertyContainer.Empty,
                 hitMiss: CacheHitMiss.Miss,
                 isCached: false);
         }

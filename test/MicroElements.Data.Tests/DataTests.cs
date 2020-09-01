@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using MicroElements.Data.Caching;
 using MicroElements.Functional;
+using MicroElements.Metadata;
 using Microsoft.Extensions.Caching.Memory;
 using Xunit;
 
@@ -10,6 +11,18 @@ namespace MicroElements.Data.Tests
 {
     public class DataTests
     {
+        [Fact]
+        public void CacheResultMetadata()
+        {
+            IMutablePropertyContainer metadata = new MutablePropertyContainer().WithValue(CacheResult.DataSource, "source");
+            CacheResult<int> cacheResult = new CacheResult<int>(new CacheSectionDescriptor<int>("int"), "key", 5, metadata: metadata, hitMiss: CacheHitMiss.Hit, error: null, isCached: true);
+            cacheResult.GetDataSource().Should().Be("source");
+
+            IMetadataProvider metadataProvider = cacheResult as IMetadataProvider;
+            metadataProvider.GetDataSource().Should().Be("source");
+            metadataProvider.Metadata.Should().BeSameAs(metadata);
+        }
+
         [Fact]
         public async Task Test1()
         {

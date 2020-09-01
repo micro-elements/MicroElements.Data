@@ -48,7 +48,7 @@ namespace MicroElements.Data.Caching
             var values = cacheSection
                 .Keys
                 .Select(key => cacheSection.GetCacheEntry(key))
-                .Where(cacheResult => !cacheResult.IsEmpty);
+                .Where(cacheResult => !cacheResult.IsEmpty());
 
             return values;
         }
