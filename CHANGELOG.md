@@ -1,3 +1,7 @@
+# 1.0.0
+- MicroElements.Functional updated to version 1.0.0
+- MicroElements.Metadata updated to version 3.5.0
+
 # 0.9.0
 - Fixed bug with removing key on cache enumeration while cache item is creating with long factory method
 

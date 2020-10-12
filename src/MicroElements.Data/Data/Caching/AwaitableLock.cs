@@ -17,16 +17,29 @@ namespace MicroElements.Data.Caching
         internal readonly struct LockLease : IDisposable
         {
             private readonly SemaphoreSlim _lock;
-            public LockLease(SemaphoreSlim @lock) => _lock = @lock;
+
+            internal LockLease(SemaphoreSlim @lock) => _lock = @lock;
+
+            /// <inheritdoc/>
             public void Dispose() => _lock.Release();
         }
 
+        /// <summary>
+        /// Waits async for <paramref name="semaphoreSlim"/> and returns <see cref="IDisposable"/> that will release lock on dispose.
+        /// </summary>
+        /// <param name="semaphoreSlim">SemaphoreSlim.</param>
+        /// <returns><see cref="IDisposable"/> that will release lock on dispose.</returns>
         public static async ValueTask<LockLease> WaitAsyncAndGetLockReleaser(this SemaphoreSlim semaphoreSlim)
         {
             await semaphoreSlim.WaitAsync();
             return new LockLease(semaphoreSlim);
         }
 
+        /// <summary>
+        /// Waits for <paramref name="semaphoreSlim"/> and returns <see cref="IDisposable"/> that will release lock on dispose.
+        /// </summary>
+        /// <param name="semaphoreSlim">SemaphoreSlim.</param>
+        /// <returns><see cref="IDisposable"/> that will release lock on dispose.</returns>
         public static LockLease WaitAndGetLockReleaser(this SemaphoreSlim semaphoreSlim)
         {
             semaphoreSlim.Wait();
