@@ -2,7 +2,7 @@ name: Build and publish
 
 on:
   push:
-    branches: [ master ]
+    branches: [ master, devops ]
   pull_request:
     branches: [ master ]
 
@@ -20,4 +20,4 @@ jobs:
     - name: Build
       run: |
         chmod a+x ./build.sh
-        build.sh --target=Travis --verbosity=normal --ForceUploadPackages=false
+        ./build.sh --target=Travis --verbosity=normal --ForceUploadPackages=false
