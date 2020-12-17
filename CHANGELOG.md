@@ -1,4 +1,4 @@
-# 2.0.0-rc.1
+# 2.0.0-rc.3
 - MicroElements.Metadata updated to version 7.0.0
 
 # 1.3.0
