@@ -10,7 +10,7 @@ namespace MicroElements.Data.Caching
     /// <summary>
     /// Represents cache result.
     /// </summary>
-    public interface ICacheResult : IMetadataProvider
+    public interface ICacheResult : IManualMetadataProvider
     {
         /// <summary>
         /// Section name.
@@ -179,12 +179,12 @@ namespace MicroElements.Data.Caching
         /// <summary>
         /// Gets <see cref="CacheResult.Elapsed"/> value.
         /// </summary>
-        public static TimeSpan GetElapsed(this IMetadataProvider provider) => provider.Metadata.GetValue(CacheResult.Elapsed);
+        public static TimeSpan GetElapsed(this ICacheResult provider) => provider.Metadata.GetValue(CacheResult.Elapsed);
 
         /// <summary>
         /// Gets <see cref="CacheResult.DataSource"/> value.
         /// </summary>
-        public static string GetDataSource(this IMetadataProvider provider) => provider.Metadata.GetValue(CacheResult.DataSource);
+        public static string? GetDataSource(this ICacheResult provider) => provider.Metadata.GetValue(CacheResult.DataSource);
 
         /// <summary>
         /// True if result is in success state.
@@ -199,12 +199,12 @@ namespace MicroElements.Data.Caching
         /// <summary>
         /// Result is empty (Not found for example).
         /// </summary>
-        public static bool IsEmpty(this ICacheResult result) => result.Error == null && (result.Metadata == null || result.Metadata == PropertyContainer.Empty) && result.HitMiss == CacheHitMiss.Miss && result.IsCached == false;
+        public static bool IsEmpty(this ICacheResult result) => result.Error == null && !result.HasMetadata() && result.HitMiss == CacheHitMiss.Miss && result.IsCached == false;
 
         /// <summary>
         /// Result is empty (Not found for example).
         /// </summary>
-        public static bool IsEmpty<T>(this in CacheResult<T> result) => result.Error == null && (result.Metadata == null || result.Metadata == PropertyContainer.Empty) && result.HitMiss == CacheHitMiss.Miss && result.IsCached == false;
+        public static bool IsEmpty<T>(this in CacheResult<T> result) => result.Error == null && !result.HasMetadata() && result.HitMiss == CacheHitMiss.Miss && result.IsCached == false;
 
         /// <summary>
         /// Creates an empty result.

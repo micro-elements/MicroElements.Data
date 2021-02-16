@@ -18,9 +18,7 @@ namespace MicroElements.Data.Tests
             CacheResult<int> cacheResult = new CacheResult<int>(new CacheSectionDescriptor<int>("int"), "key", 5, metadata: metadata, hitMiss: CacheHitMiss.Hit, error: null, isCached: true);
             cacheResult.GetDataSource().Should().Be("source");
 
-            IMetadataProvider metadataProvider = cacheResult as IMetadataProvider;
-            metadataProvider.GetDataSource().Should().Be("source");
-            metadataProvider.Metadata.Should().BeSameAs(metadata);
+            cacheResult.Metadata.Should().BeSameAs(metadata);
         }
 
         [Fact]
