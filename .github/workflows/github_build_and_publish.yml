@@ -4,6 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       ForceUploadPackages:
+        type: boolean
         description: "ForceUploadPackages"
         required: false
 
