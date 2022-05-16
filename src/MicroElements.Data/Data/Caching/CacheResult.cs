@@ -4,6 +4,7 @@
 using System;
 using MicroElements.Functional;
 using MicroElements.Metadata;
+using MicroElements.Metadata.Schema;
 
 namespace MicroElements.Data.Caching
 {

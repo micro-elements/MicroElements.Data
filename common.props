@@ -2,9 +2,9 @@
   <Import Project="version.props" />
   <PropertyGroup>
     <Product>MicroElements.Data</Product>
-    <Copyright>2020</Copyright>
+    <Copyright>2022</Copyright>
     <Authors>micro-elements</Authors>
-    <Description>Data aspects: caching, processing, pipeline</Description>
+    <Description>Data aspects: caching</Description>
 
     <PackageTags>cache;processing;pipeline</PackageTags>
     <PackageIconUrl>https://raw.githubusercontent.com/micro-elements/MicroElements/master/image/logo_rounded.png</PackageIconUrl>
