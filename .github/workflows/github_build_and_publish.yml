@@ -24,4 +24,4 @@ jobs:
           UPLOAD_NUGET_API_KEY: ${{ secrets.UPLOAD_NUGET_API_KEY }}
         run: |
           chmod a+x ./build.sh
-          ./build.sh --target=Travis --verbosity=normal --ForceUploadPackages=${{ inputs.ForceUploadPackages }}
+          ./build.sh --target=Travis --verbosity=normal --ForceUploadPackages=${{ github.event.inputs.ForceUploadPackages }}
